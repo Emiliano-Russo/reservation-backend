@@ -5,12 +5,14 @@ import { User } from "./entities/user.entity";
 import { v4 as uuidv4 } from 'uuid';
 import { S3Service } from "src/shared/s3.service";
 import { readFileSync } from "fs";
+import { ReservationService } from "src/reservation/reservation.service";
+import { ReservationController } from "src/reservation/reservation.controller";
 
 
 @Injectable()
 export class UserService {
 
-    constructor(private s3Service: S3Service) {
+    constructor(private s3Service: S3Service, private reservation: ReservationService) {
     }
 
     async createUser(data: CreateUserDto, userImage: any) {

@@ -1,0 +1,7 @@
+{
+    "eslint.codeAction.disableRuleComment": {
+        "enable": false
+    },
+    "eslint.enable": false,
+    "editor.formatOnSave": true
+}
