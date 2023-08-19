@@ -25,18 +25,19 @@ export class UserService {
             throw new Error('Username or email already exists');
         }
 
+        let imageLink = '';
         if (userImage) {
             console.log("uploading user image...");
             // Subir la imagen de perfil al almacenamiento S3 y obtener la URL
-            const result = await this.s3Service.uploadFile('avatars/' + userImage.fieldname, userImage.buffer, userImage.mimetype);
-            console.log("el result: ", result);
+            imageLink = await this.s3Service.uploadFile('avatars/' + userImage.fieldname, userImage.buffer, userImage.mimetype);
+            console.log("el result: ", imageLink);
         }
 
         const user = new User({
             ...data,
             id: uuidv4(), // Usar el id proporcionado o generar uno nuevo
             password: hashedPassword,
-            //profileImage: uploadResult.Location, // Guardar la URL de la imagen de perfil
+            profileImage: imageLink, // Guardar la URL de la imagen de perfil
             followers: [],
             following: [],
             followRequests: [],

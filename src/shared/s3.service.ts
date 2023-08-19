@@ -23,7 +23,7 @@ export class S3Service {
         await this.s3.send(command);
 
         // Construir la URL del objeto
-        const objectUrl = `https://${this.bucket_name}.s3.${this.s3.config.region}.amazonaws.com/${key}`;
+        const objectUrl = `https://${this.bucket_name}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
         return objectUrl;
     }
