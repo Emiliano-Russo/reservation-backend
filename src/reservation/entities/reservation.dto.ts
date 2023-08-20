@@ -10,7 +10,7 @@ export class ReservationDto {
     businessId: string;
 
     @IsNotEmpty()
-    date: Date
+    date: string
 
     @IsNotEmpty()
     status: string;
