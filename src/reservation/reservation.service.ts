@@ -27,4 +27,37 @@ export class ReservationService {
         return await reservation.save();
     }
 
+    async updateReservation(createReservationDto: ReservationDto): Promise<any> {
+        const reservation = Reservation.get(createReservationDto.id);
+
+        if (!reservation) {
+            throw new Error('Reservation not found');
+        }
+
+        return Reservation.update({
+            id: createReservationDto.id,
+            businessId: createReservationDto.businessId,
+            reservationDate: new Date(createReservationDto.date),
+            status: this._reservationStatusConverter(createReservationDto.status),
+        });
+    }
+
+    _reservationStatusConverter(reservationStatus: String): ReservationStatus {
+        switch (reservationStatus) {
+            case 'Pending':
+                return ReservationStatus.Pending
+            case 'Confirmed':
+                return ReservationStatus.Confirmed
+            case 'Realized':
+                return ReservationStatus.Realized
+            case 'Cancelled':
+                return ReservationStatus.Cancelled
+            case 'Rejected':
+                return ReservationStatus.Rejected
+            case 'NotAttended':
+                return ReservationStatus.NotAttended
+            default:
+                throw new Error("Error en la reservación")
+        }
+    }
 }

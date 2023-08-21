@@ -25,4 +25,11 @@ export class ReservationController {
         console.log("what we got... ", createReservationDto);
         return this.reservationService.createReservation(createReservationDto);
     }
+
+    @Post()
+    async updateReservation(
+        @Body() updateReservationDto: ReservationDto
+    ) {
+        return this.reservationService.updateReservation(updateReservationDto);
+    }
 }
