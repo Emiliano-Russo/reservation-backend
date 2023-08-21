@@ -18,7 +18,6 @@ export class UserController {
         @UploadedFile() userImage: any,
         @Body() createUserDto: CreateUserDto,
     ) {
-        console.log("CONTROLLER");
         createUserDto.emailVerified =
             createUserDto.emailVerified == 'true' ? true : false;
         return this.userService.createUser(createUserDto, userImage);
