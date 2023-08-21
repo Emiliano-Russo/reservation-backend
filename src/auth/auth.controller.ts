@@ -21,6 +21,7 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Post('local')
     async login(@Request() req) {
+        console.log("la request: ", req.user);
         const { access_token } = await this.authService.login(req.user);
         const user = await this.userService.findOneByEmail(req.user.email);
         return {
