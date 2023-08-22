@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Reservation, ReservationStatus } from './entities/reservation.entity';
 import { ReservationDto } from './entities/reservation.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { ReservationUpdateDto } from './entities/reservation-update.dto';
 
 @Injectable()
 export class ReservationService {
@@ -27,37 +28,23 @@ export class ReservationService {
         return await reservation.save();
     }
 
-    async updateReservation(createReservationDto: ReservationDto): Promise<any> {
-        const reservation = Reservation.get(createReservationDto.id);
+    async updateReservation(id: string, updateDto: ReservationUpdateDto): Promise<any> {
+        const reservation = await Reservation.get(id);
 
         if (!reservation) {
             throw new Error('Reservation not found');
         }
 
-        return Reservation.update({
-            id: createReservationDto.id,
-            businessId: createReservationDto.businessId,
-            reservationDate: new Date(createReservationDto.date),
-            status: this._reservationStatusConverter(createReservationDto.status),
-        });
-    }
+        const updateData: any = {};
 
-    _reservationStatusConverter(reservationStatus: String): ReservationStatus {
-        switch (reservationStatus) {
-            case 'Pending':
-                return ReservationStatus.Pending
-            case 'Confirmed':
-                return ReservationStatus.Confirmed
-            case 'Realized':
-                return ReservationStatus.Realized
-            case 'Cancelled':
-                return ReservationStatus.Cancelled
-            case 'Rejected':
-                return ReservationStatus.Rejected
-            case 'NotAttended':
-                return ReservationStatus.NotAttended
-            default:
-                throw new Error("Error en la reservación")
+        if (updateDto.date) {
+            updateData.reservationDate = new Date(updateDto.date);
         }
+
+        if (updateDto.status) {
+            updateData.status = updateDto.status;
+        }
+
+        return Reservation.update(id, updateData);
     }
 }
