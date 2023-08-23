@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Reservation, ReservationStatus } from './entities/reservation.entity';
-import { ReservationDto } from './entities/reservation.dto';
+import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
 
@@ -15,7 +15,7 @@ export class ReservationService {
         return reservations;
     }
 
-    async createReservation(createReservationDto: ReservationDto): Promise<any> {
+    async createReservation(createReservationDto: ReservationCreateDto): Promise<any> {
         console.log("creating....");
         const reservation = new Reservation({
             id: uuidv4(),
@@ -46,5 +46,15 @@ export class ReservationService {
         }
 
         return Reservation.update(id, updateData);
+    }
+
+    async removeReservation(id: string) {
+        const reservation = await Reservation.get(id);
+
+        if (!reservation) {
+            throw new Error('Reservation not found');
+        }
+
+        return reservation.delete();
     }
 }

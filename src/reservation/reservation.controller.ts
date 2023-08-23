@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ReservationService } from "./reservation.service";
-import { ReservationDto } from "./entities/reservation.dto";
+import { ReservationCreateDto } from "./entities/reservation-create.dto";
 import { ReservationUpdateDto } from "./entities/reservation-update.dto";
 
 
@@ -21,7 +21,7 @@ export class ReservationController {
 
     @Post()
     async createReservation(
-        @Body() createReservationDto: ReservationDto
+        @Body() createReservationDto: ReservationCreateDto
     ) {
         console.log("what we got... ", createReservationDto);
         return this.reservationService.createReservation(createReservationDto);
@@ -33,5 +33,12 @@ export class ReservationController {
         @Body() updateReservationDto: ReservationUpdateDto
     ) {
         return this.reservationService.updateReservation(id, updateReservationDto);
+    }
+
+    @Delete(":id")
+    async removeReservation(
+        @Param('id') id: string
+    ) {
+        return this.reservationService.removeReservation(id);
     }
 }
