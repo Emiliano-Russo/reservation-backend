@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class ReservationDto {
+export class ReservationCreateDto {
     id?: string
 
     @IsNotEmpty()
