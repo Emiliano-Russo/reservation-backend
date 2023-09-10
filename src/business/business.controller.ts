@@ -1,5 +1,6 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Query } from "@nestjs/common";
 import { BusinessService } from "./business.service";
+import { BusinessCreateDto } from "./entities/business-create.dto";
 
 @Controller('business')
 export class BusinessController {
@@ -35,5 +36,20 @@ export class BusinessController {
         @Query('activePremiumSubscriptionId') activePremiumSubscriptionId: string
     ) {
         return this.businessService.getBusinessByActivePremiumSubscriptionId(activePremiumSubscriptionId);
+    }
+
+    @Post()
+    async createBusiness(
+        @Body() createBusinessDto: BusinessCreateDto
+    ) {
+        console.log("what we got... ", createBusinessDto);
+        return this.businessService.createBusiness(createBusinessDto);
+    }
+
+    @Delete(":id")
+    async removeBusiness(
+        @Param('id') id: string
+    ) {
+        return this.businessService.removeBusiness(id);
     }
 }
