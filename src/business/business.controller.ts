@@ -70,27 +70,25 @@ export class BusinessController {
   }
 
   @Get()
-  async getBusinessById(@Query('businessId') businessId: string) {
-    return this.businessService.getBusinessById(businessId);
-  }
-
-  @Get('/owner')
-  async getBusinessByOwnerId(@Query('ownerId') ownerId: string) {
-    return this.businessService.getBusinessByOwnerId(ownerId);
-  }
-
-  @Get('/type')
-  async getBusinessByTypeId(@Query('typeId') typeId: string) {
-    return this.businessService.getBusinessByTypeId(typeId);
-  }
-
-  @Get('/premiumSubscription')
-  async getBusinessByActivePremiumSubscriptionId(
-    @Query('activePremiumSubscriptionId') activePremiumSubscriptionId: string,
+  async getBusiness(
+    @Query('businessId') businessId?: string,
+    @Query('ownerId') ownerId?: string,
+    @Query('typeId') typeId?: string,
+    @Query('activePremiumSubscriptionId') activePremiumSubscriptionId?: string,
   ) {
-    return this.businessService.getBusinessByActivePremiumSubscriptionId(
-      activePremiumSubscriptionId,
-    );
+    if (businessId) {
+      return this.businessService.getBusinessById(businessId);
+    } else if (ownerId) {
+      return this.businessService.getBusinessByOwnerId(ownerId);
+    } else if (typeId) {
+      return this.businessService.getBusinessByTypeId(typeId);
+    } else if (activePremiumSubscriptionId) {
+      return this.businessService.getBusinessByActivePremiumSubscriptionId(
+        activePremiumSubscriptionId,
+      );
+    } else {
+      throw new BadRequestException('Invalid query parameters.');
+    }
   }
 
   @Patch(':id')
