@@ -1,17 +1,49 @@
-import { IsNotEmpty } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsBoolean,
+  IsString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ExtraDto {
+  @IsString()
+  @IsNotEmpty()
+  label: string;
+
+  @IsString()
+  @IsNotEmpty()
+  value: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  labelFirst: boolean;
+}
 
 export class ReservationCreateDto {
-    id?: string
+  id?: string;
 
-    @IsNotEmpty()
-    userId: string;
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
 
-    @IsNotEmpty()
-    businessId: string;
+  @IsString()
+  @IsNotEmpty()
+  businessId: string;
 
-    @IsNotEmpty()
-    date: string
+  @IsString()
+  @IsNotEmpty()
+  reservationDate: string;
 
-    @IsNotEmpty()
-    status: string;
+  @IsString()
+  @IsNotEmpty()
+  status: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ExtraDto)
+  extras?: ExtraDto[];
 }
