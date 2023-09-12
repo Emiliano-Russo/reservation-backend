@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { BusinessService } from "./business.service";
 import { BusinessCreateDto } from "./entities/business-create.dto";
+import { BusinessUpdateDto } from "./entities/business-update.dto";
 
 @Controller('business')
 export class BusinessController {
@@ -44,6 +45,33 @@ export class BusinessController {
     ) {
         console.log("what we got... ", createBusinessDto);
         return this.businessService.createBusiness(createBusinessDto);
+    }
+
+    @Patch(":id")
+    async UpdateBusiness(
+        @Param('id') id: string,
+        @Body() businessUpdateDto: BusinessUpdateDto
+    ) {
+        console.log("what we got... ", businessUpdateDto);
+        return this.businessService.updateBusiness(id, businessUpdateDto);
+    }
+
+    @Patch(":id")
+    async updateBusinessInvitation(
+        @Param('id') id: string,
+        @Body() businessUpdateDto: BusinessUpdateDto
+    ) {
+        console.log("what we got... ", businessUpdateDto);
+        return this.businessService.updateBusinessInvitation(id, businessUpdateDto);
+    }
+
+    @Patch(":id")
+    async updateBusinessStatus(
+        @Param('id') id: string,
+        @Body() businessUpdateDto: BusinessUpdateDto
+    ) {
+        console.log("what we got... ", businessUpdateDto);
+        return this.businessService.updateBusinessStatus(id, businessUpdateDto);
     }
 
     @Delete(":id")
