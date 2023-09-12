@@ -8,6 +8,7 @@ import { readFileSync } from 'fs';
 import { ReservationService } from 'src/reservation/reservation.service';
 import { ReservationController } from 'src/reservation/reservation.controller';
 import { AuthService } from 'src/auth/auth.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UserService {
@@ -15,6 +16,7 @@ export class UserService {
     private s3Service: S3Service,
     private reservation: ReservationService,
     private authService: AuthService,
+    private mailService: MailService,
   ) {}
 
   async getUser(id: string) {
@@ -58,8 +60,13 @@ export class UserService {
       bio: data.bio || '¡Bienvenidos a mi Perfil!',
     });
 
+    console.log('saving user....');
     const createdUser = await user.save();
 
+    // deshabilitado de momento, NO BORRAR!
+    // await this.mailService.sendConfirmationEmail(user.email);
+
+    console.log('generating token...');
     // Genera un token de acceso para el usuario
     const token = await this.authService.login(createdUser);
     console.log('finalmente el token: ', token);
