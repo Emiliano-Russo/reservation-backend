@@ -47,13 +47,39 @@ const BusinessSchema = new dynamoose.Schema({
   assistantsID: { type: Array, schema: [String] },
   pendingInvitationsID: { type: Array, schema: [String] },
   status: { type: String, enum: Object.values(BusinessStatus), required: true },
-  availability: { type: Object, schema: AvailabilitySchema, required: true },
+  availability: {
+    type: Array,
+    schema: [{ type: Object, schema: AvailabilitySchema }],
+    required: true,
+  },
 });
 
 export interface IBusiness extends AnyItem {
   id: String;
+  ownerId: String;
+  typeId: String;
   name: String;
+  address: String;
+  coordinates: Object;
+  activePremiumSubscriptionID: String;
+  logoURL: String;
+  multimediaURL: Array<String>;
   description: String;
+  assistantsID: Array<String>;
+  pendingInvitationsID: Array<String>;
+  status: BusinessStatus;
+  availability: Array<IAvailability>;
+}
+
+export interface IAvailability extends AnyItem {
+  day: WeekDays;
+  shfits: Array<IShift>;
+  open: Boolean;
+}
+
+export interface IShift extends AnyItem {
+  openingTime: String;
+  closingTime: String;
 }
 
 export const Business = dynamoose.model<IBusiness>('Business', BusinessSchema);
