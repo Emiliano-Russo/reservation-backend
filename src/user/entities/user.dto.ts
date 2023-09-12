@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
   id?: string;
@@ -9,13 +9,16 @@ export class CreateUserDto {
   googleId?: string;
 
   @IsNotEmpty()
-  username: string;
-
-  @IsNotEmpty()
   name: string;
 
   @IsEmail()
   email: string;
+
+  @IsNotEmpty()
+  phone: string; // Añadido
+
+  @IsNotEmpty()
+  civilIdDoc: string; // Añadido
 
   @IsNotEmpty()
   password: string;
@@ -24,7 +27,5 @@ export class CreateUserDto {
 
   bio?: string;
 
-  emailVerified: any;
-
-  isPrivate: any;
+  chats?: string[]; // Añadido
 }

@@ -17,6 +17,10 @@ export class UserService {
     private authService: AuthService,
   ) {}
 
+  async getUser(id: string) {
+    return User.get(id);
+  }
+
   async createUser(data: CreateUserDto, userImage: any) {
     console.log('creating user...');
     const hashedPassword = await bcrypt.hash(data.password, 10);
