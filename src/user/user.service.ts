@@ -35,14 +35,13 @@ export class UserService {
       throw new Error('Username or email already exists');
     }
 
-    let imageLink = '';
+    let imageLink;
     if (userImage) {
       console.log('uploading user image...');
       // Subir la imagen de perfil al almacenamiento S3 y obtener la URL
       imageLink = await this.s3Service.uploadFile(
         'avatars/' + userImage.fieldname,
-        userImage.buffer,
-        userImage.mimetype,
+        userImage,
       );
       console.log('el result: ', imageLink);
     }

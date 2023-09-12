@@ -10,9 +10,6 @@ import { BusinessStatus, IAvailability } from './business.entity';
 
 export class BusinessCreateDto {
   @IsString()
-  id?: string;
-
-  @IsString()
   @IsNotEmpty()
   ownerId: string;
 
@@ -26,35 +23,27 @@ export class BusinessCreateDto {
 
   @IsString()
   @IsNotEmpty()
+  country: string;
+
+  @IsString()
+  @IsNotEmpty()
   address: string;
 
   @IsObject()
   @IsNotEmpty()
-  coordinates: Object;
+  coordinates: object; // <-- Considerar una validación más específica aquí
 
   @IsString()
   @IsOptional()
-  activePremiumSubscriptionId: string;
-
-  @IsString()
-  @IsOptional()
-  logoUrl: string;
+  logoURL: string;
 
   @IsArray()
   @IsOptional()
-  multimediaURL: Array<string>;
+  multimediaURL: string[];
 
   @IsString()
   @IsOptional()
   description: string;
-
-  @IsArray()
-  @IsOptional()
-  assistantsID: Array<string>;
-
-  @IsArray()
-  @IsOptional()
-  pendingInvitationsID: Array<string>;
 
   @IsNotEmpty()
   @IsEnum(BusinessStatus)
@@ -62,5 +51,5 @@ export class BusinessCreateDto {
 
   @IsNotEmpty()
   @IsArray()
-  availability: Array<IAvailability>;
+  availability: IAvailability[];
 }

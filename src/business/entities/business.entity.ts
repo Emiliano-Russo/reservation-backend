@@ -38,6 +38,7 @@ const BusinessSchema = new dynamoose.Schema({
   ownerId: { type: String, required: true },
   typeId: { type: String, required: true },
   name: { type: String, required: true },
+  country: { type: String, required: true },
   address: { type: String, required: true },
   coordinates: { type: Object, schema: MapSchema, required: true },
   activePremiumSubscriptionID: { type: String },
@@ -59,6 +60,7 @@ export interface IBusiness extends AnyItem {
   ownerId: String;
   typeId: String;
   name: String;
+  country: String;
   address: String;
   coordinates: Object;
   activePremiumSubscriptionID: String;
@@ -73,7 +75,7 @@ export interface IBusiness extends AnyItem {
 
 export interface IAvailability extends AnyItem {
   day: WeekDays;
-  shfits: Array<IShift>;
+  shifts: Array<IShift>;
   open: Boolean;
 }
 

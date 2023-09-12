@@ -15,35 +15,35 @@ export class S3Service {
     this.s3 = new S3Client({ region: 'us-east-1' }); // Cambia a tu región
   }
 
-  async uploadFile(key: string, body: Buffer | Readable, contentType: string) {
-    const command = new PutObjectCommand({
-      Bucket: this.bucket_name,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-      ACL: 'public-read',
-    });
+  async uploadFile(file, folder) {
+    const { originalname } = file;
 
-    await this.s3.send(command);
-
-    // Construir la URL del objeto
-    const objectUrl = `https://${this.bucket_name}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-
-    return objectUrl;
+    return this.s3_upload(
+      file.buffer,
+      this.bucket_name,
+      originalname,
+      file.mimetype,
+      folder,
+    );
   }
 
-  async downloadFile(key: string): Promise<Readable> {
-    const command = new GetObjectCommand({
-      Bucket: this.bucket_name,
-      Key: key,
-    });
+  private async s3_upload(file, bucket, name, mimetype, folder) {
+    const params = {
+      Bucket: bucket,
+      Key: `${folder}${name}`,
+      Body: file,
+      ACL: 'public-read',
+      ContentType: mimetype,
+      ContentDisposition: 'inline',
+      CreateBucketConfiguration: {
+        LocationConstraint: 'ap-south-1',
+      },
+    };
 
     try {
-      const { Body } = await this.s3.send(command);
-      return Body as Readable;
-    } catch (error) {
-      console.error(`Error al descargar el archivo ${key}:`, error);
-      throw error;
+      return await this.s3.send(new PutObjectCommand(params));
+    } catch (e) {
+      console.log(e);
     }
   }
 }

@@ -1,21 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   Business,
   BusinessStatus,
   IAvailability,
-  IShift,
   WeekDays,
 } from './entities/business.entity';
 import { BusinessCreateDto } from './entities/business-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { BusinessUpdateDto } from './entities/business-update.dto';
+import { User } from 'src/user/entities/user.entity';
+import { BusinessType } from 'src/businessType/entities/businessType.entity';
+import { S3Service } from 'src/shared/s3.service';
+import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class BusinessService {
-  constructor() {}
+  constructor(private readonly s3Service: S3Service) {}
 
   async getBusinessById(id: string) {
-    const business = await Business.scan('id').eq(id).exec();
+    const business = await Business.get(id);
     return business;
   }
 
@@ -126,24 +129,61 @@ export class BusinessService {
     return Business.update(id, updateData);
   }
 
-  async createBusiness(businessCreateDto: BusinessCreateDto): Promise<any> {
+  async createBusiness(
+    businessCreateDto: BusinessCreateDto,
+    logo: any,
+    banner: any,
+  ): Promise<any> {
+    const owner = await User.get(businessCreateDto.ownerId);
+    if (owner == undefined)
+      throw new NotFoundException('Owner does not exists');
+
+    const businessType = BusinessType.get(businessCreateDto.typeId);
+    if (businessType == undefined)
+      throw new NotFoundException('Business Type does not exists');
+
+    let logoUrl =
+      'https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=2000'; // URL por defecto
+    let bannerUrl =
+      'https://i.pinimg.com/564x/08/8c/09/088c099c81191b734e0db14f0e253142.jpg'; // Puedes poner una URL de imagen de banner por defecto aquí
+
+    if (logo) {
+      const sanitizedFilename = logo.originalname.replace(/\s+/g, '');
+      logo.originalname = sanitizedFilename;
+      await this.s3Service.uploadFile(
+        logo,
+        `business/${businessCreateDto.ownerId}/logo/`,
+      );
+      logoUrl = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${businessCreateDto.ownerId}/logo/${sanitizedFilename}`;
+    }
+
+    if (banner) {
+      const sanitizedBannerFilename = banner.originalname.replace(/\s+/g, '');
+      banner.originalname = sanitizedBannerFilename;
+      await this.s3Service.uploadFile(
+        banner,
+        `business/${businessCreateDto.ownerId}/banner/`,
+      );
+      bannerUrl = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${businessCreateDto.ownerId}/banner/${sanitizedBannerFilename}`;
+    }
+
     const business = new Business({
       id: uuidv4(),
       ownerId: businessCreateDto.ownerId,
       typeId: businessCreateDto.typeId,
       name: businessCreateDto.name,
+      country: businessCreateDto.country,
       address: businessCreateDto.address,
       coordinates: businessCreateDto.coordinates,
-      activePremiumSubscriptionID:
-        businessCreateDto.activePremiumSubscriptionId,
-      logoUrl: businessCreateDto.logoUrl,
-      multimediaUrl: businessCreateDto.multimediaURL,
+      logoURL: logoUrl,
+      multimediaURL: [bannerUrl], // Si tienes varias URL de multimedia, combínalas aquí.
       description: businessCreateDto.description,
-      assistantsID: businessCreateDto.assistantsID,
-      pendingInvitationsID: businessCreateDto.pendingInvitationsID,
+      assistantsID: [],
+      pendingInvitationsID: [],
       status: BusinessStatus.Pending,
       availability: businessCreateDto.availability,
     });
+
     return await business.save();
   }
 

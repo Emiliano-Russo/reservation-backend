@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,14 +8,66 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BusinessService } from './business.service';
 import { BusinessCreateDto } from './entities/business-create.dto';
 import { BusinessUpdateDto } from './entities/business-update.dto';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 
 @Controller('business')
 export class BusinessController {
   constructor(private readonly businessService: BusinessService) {}
+
+  @Post()
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'logo', maxCount: 1 },
+      { name: 'banner', maxCount: 1 },
+    ]),
+  )
+  async createBusiness(
+    @Body() createBusinessDto: BusinessCreateDto,
+    @UploadedFiles() files: { logo?: any; banner?: any },
+  ) {
+    // Convertir la cadena JSON 'coordinates' en un objeto.
+    if (typeof createBusinessDto.coordinates === 'string') {
+      try {
+        createBusinessDto.coordinates = JSON.parse(
+          createBusinessDto.coordinates,
+        );
+      } catch (error) {
+        throw new BadRequestException('Invalid coordinates format');
+      }
+    }
+
+    // Convertir la cadena JSON 'availability' en un array.
+    if (typeof createBusinessDto.availability === 'string') {
+      try {
+        createBusinessDto.availability = JSON.parse(
+          createBusinessDto.availability,
+        );
+      } catch (error) {
+        throw new BadRequestException('Invalid availability format');
+      }
+    }
+
+    console.log('DTO received: ', createBusinessDto);
+    console.log('Logo received: ', files.logo);
+    console.log('Banner received: ', files.banner);
+
+    return this.businessService.createBusiness(
+      createBusinessDto,
+      files.logo ? files.logo[0] : undefined,
+      files.banner ? files.banner[0] : undefined,
+    );
+  }
 
   @Get()
   async getBusinessById(@Query('businessId') businessId: string) {
@@ -38,12 +91,6 @@ export class BusinessController {
     return this.businessService.getBusinessByActivePremiumSubscriptionId(
       activePremiumSubscriptionId,
     );
-  }
-
-  @Post()
-  async createBusiness(@Body() createBusinessDto: BusinessCreateDto) {
-    console.log('what we got... ', createBusinessDto);
-    return this.businessService.createBusiness(createBusinessDto);
   }
 
   @Patch(':id')
