@@ -143,6 +143,9 @@ export class BusinessService {
       assistantsID: [],
       pendingInvitationsID: [],
       status: BusinessStatus.Pending,
+      totalRatingSum: 0,
+      totalRatingsCount: 0,
+      averageRating: 0,
       availability: businessCreateDto.availability,
     });
 

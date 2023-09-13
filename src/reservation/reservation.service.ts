@@ -6,6 +6,7 @@ import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { NotFoundException } from '@nestjs/common';
 import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
+import { Business } from 'src/business/entities/business.entity';
 
 @Injectable()
 export class ReservationService {
@@ -75,6 +76,13 @@ export class ReservationService {
 
   async rateReservation(id: string, ratingDto: RatingDto): Promise<any> {
     const reservation = await Reservation.get(id);
+    console.log('reservation: ', reservation);
+    const business = await Business.get({ id: reservation.businessId });
+    business.totalRatingsCount += 1;
+    business.totalRatingSum += ratingDto.rating;
+    business.averageRating = Number(
+      (business.totalRatingSum / business.totalRatingsCount).toFixed(1),
+    );
 
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
@@ -84,7 +92,7 @@ export class ReservationService {
       rating: ratingDto.rating,
       comment: ratingDto.comment,
     };
-
+    await business.save();
     return Reservation.update(id, updateData);
   }
 

@@ -48,6 +48,9 @@ const BusinessSchema = new dynamoose.Schema({
   assistantsID: { type: Array, schema: [String] },
   pendingInvitationsID: { type: Array, schema: [String] },
   status: { type: String, enum: Object.values(BusinessStatus), required: true },
+  totalRatingSum: { type: Number, required: false, default: 0 }, // La suma total de todas las calificaciones.
+  totalRatingsCount: { type: Number, required: false, default: 0 }, // La cantidad total de calificaciones que ha recibido.
+  averageRating: { type: Number, required: false, default: 0 }, // El promedio de las calificaciones.
   availability: {
     type: Array,
     schema: [{ type: Object, schema: AvailabilitySchema }],
