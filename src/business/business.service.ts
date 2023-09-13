@@ -3,6 +3,7 @@ import {
   Business,
   BusinessStatus,
   IAvailability,
+  IBusiness,
   WeekDays,
 } from './entities/business.entity';
 import { BusinessCreateDto } from './entities/business-create.dto';
@@ -43,90 +44,51 @@ export class BusinessService {
 
   async updateBusiness(
     id: string,
-    businessUpdateDto: BusinessUpdateDto,
-  ): Promise<any> {
+    updateData: BusinessUpdateDto,
+    logo?: any,
+    banner?: any,
+  ): Promise<IBusiness> {
     const business = await Business.get(id);
-
+    console.log('el business:', business);
     if (!business) {
-      throw new Error('Business not found');
+      throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
-    const updateData: any = {};
-
-    updateData.name = businessUpdateDto.name ?? business.name;
-    updateData.address = businessUpdateDto.address ?? business.address;
-    updateData.coordinates =
-      businessUpdateDto.coordinates ?? business.coordinates;
-    updateData.activePremiumSubscriptionId =
-      businessUpdateDto.activePremiumSubscriptionId ??
-      business.activePremiumSubscriptionId;
-    updateData.logoUrl = businessUpdateDto.logoUrl ?? business.logoURL;
-    updateData.multimediaURL =
-      businessUpdateDto.multimediaURL ?? business.multimediaURL;
-    updateData.description =
-      businessUpdateDto.description ?? business.description;
-    updateData.assistantsID =
-      businessUpdateDto.assistantsID ?? business.assistantsID;
-    updateData.pendingInvitationsID =
-      businessUpdateDto.pendingInvitationsID ?? business.pendingInvitationsID;
-    updateData.status = businessUpdateDto.status ?? business.status;
-    updateData.availability =
-      businessUpdateDto.availability ?? business.availability;
-
-    return Business.update(id, updateData);
-  }
-
-  async updateBusinessInvitation(
-    id: string,
-    businessUpdateDto: BusinessUpdateDto,
-  ): Promise<any> {
-    const business = await Business.get(id);
-
-    if (!business) {
-      throw new Error('Business not found');
+    if (logo) {
+      console.log('updating logo: ', logo);
+      const sanitizedFilename = logo[0].originalname.replace(/\s+/g, '');
+      logo[0].originalname = sanitizedFilename;
+      await this.s3Service.uploadFile(
+        logo[0],
+        `business/${business.ownerId}/logo/`,
+      );
+      business.logoURL = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${business.ownerId}/logo/${sanitizedFilename}`;
     }
 
-    const updateData: any = {};
+    if (banner) {
+      console.log('updating banner', banner);
+      const sanitizedBannerFilename = banner[0].originalname.replace(
+        /\s+/g,
+        '',
+      );
+      banner[0].originalname = sanitizedBannerFilename;
+      await this.s3Service.uploadFile(
+        banner[0],
+        `business/${business.ownerId}/banner/`,
+      );
+      business.multimediaURL = [
+        `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${business.ownerId}/banner/${sanitizedBannerFilename}`,
+      ];
+    }
 
-    updateData.pendingInvitationsID = business.pendingInvitationsID;
-    var indexInvitationID = (
-      updateData.pendingInvitationsID as Array<String>
-    )?.indexOf(businessUpdateDto.selectedPendingInvitationID);
-
-    if (businessUpdateDto.acceptInvitation) {
-      if (indexInvitationID && indexInvitationID > -1) {
-        (updateData.pendingInvitationsID as Array<string>).splice(
-          indexInvitationID,
-          indexInvitationID,
-        );
-        (updateData.assistantsID as Array<string>).push(
-          businessUpdateDto.selectedPendingInvitationID,
-        );
-      }
-    } else {
-      if (indexInvitationID > -1) {
-        (updateData.pendingInvitationsID as Array<string>).splice(
-          indexInvitationID,
-          indexInvitationID,
-        );
+    for (const key in updateData) {
+      if (Object.prototype.hasOwnProperty.call(updateData, key)) {
+        business[key] = updateData[key];
       }
     }
 
-    return Business.update(id, updateData);
-  }
-
-  async updateBusinessStatus(id: string, businessUpdateDto: BusinessUpdateDto) {
-    const business = await Business.get(id);
-
-    if (!business) {
-      throw new Error('Business not found');
-    }
-
-    const updateData: any = {};
-
-    updateData.status = businessUpdateDto.status ?? business.status;
-
-    return Business.update(id, updateData);
+    await business.save();
+    return business;
   }
 
   async createBusiness(
@@ -185,15 +147,6 @@ export class BusinessService {
     });
 
     return await business.save();
-  }
-
-  _convertAvailabilities(availabilities: Array<IAvailability>) {
-    availabilities.map((availability) => {
-      availability.day = WeekDays[(availability as IAvailability).day];
-      return availability;
-    });
-    console.log(availabilities);
-    return availabilities;
   }
 
   async removeBusiness(id: string) {

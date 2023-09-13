@@ -1,64 +1,13 @@
-import {
-  IsArray,
-  IsBoolean,
-  IsEnum,
-  IsNotEmpty,
-  IsObject,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-import { BusinessStatus, IAvailability } from './business.entity';
+// business-update.dto.ts
+import { PartialType } from '@nestjs/mapped-types';
+import { BusinessCreateDto } from './business-create.dto';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export class BusinessUpdateDto {
+export class BusinessUpdateDto extends PartialType(BusinessCreateDto) {
   @IsString()
-  @IsOptional()
-  name: string;
+  @IsNotEmpty()
+  id: string;
 
-  @IsString()
-  @IsOptional()
-  address: string;
-
-  @IsObject()
-  @IsOptional()
-  coordinates: Object;
-
-  @IsString()
-  @IsOptional()
-  activePremiumSubscriptionId: string;
-
-  @IsString()
-  @IsOptional()
-  logoUrl: string;
-
-  @IsArray()
-  @IsOptional()
-  multimediaURL: Array<string>;
-
-  @IsString()
-  @IsOptional()
-  description: string;
-
-  @IsBoolean()
-  @IsOptional()
-  acceptInvitation: boolean;
-
-  @IsArray()
-  @IsOptional()
-  assistantsID: Array<string>;
-
-  @IsString()
-  @IsOptional()
-  selectedPendingInvitationID: string;
-
-  @IsArray()
-  @IsOptional()
-  pendingInvitationsID: Array<string>;
-
-  @IsOptional()
-  @IsEnum(BusinessStatus)
-  status: BusinessStatus;
-
-  @IsOptional()
-  @IsArray()
-  availability: Array<IAvailability>;
+  logo?: any; // Representa la imagen del logo
+  banner?: any; // Representa la imagen del banner
 }

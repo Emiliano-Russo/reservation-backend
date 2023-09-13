@@ -92,30 +92,23 @@ export class BusinessController {
   }
 
   @Patch(':id')
-  async UpdateBusiness(
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'logo', maxCount: 1 },
+      { name: 'banner', maxCount: 1 },
+    ]),
+  )
+  async updateBusiness(
     @Param('id') id: string,
+    @UploadedFiles() files: { logo?: any; banner?: any },
     @Body() businessUpdateDto: BusinessUpdateDto,
   ) {
-    console.log('what we got... ', businessUpdateDto);
-    return this.businessService.updateBusiness(id, businessUpdateDto);
-  }
-
-  @Patch(':id')
-  async updateBusinessInvitation(
-    @Param('id') id: string,
-    @Body() businessUpdateDto: BusinessUpdateDto,
-  ) {
-    console.log('what we got... ', businessUpdateDto);
-    return this.businessService.updateBusinessInvitation(id, businessUpdateDto);
-  }
-
-  @Patch(':id')
-  async updateBusinessStatus(
-    @Param('id') id: string,
-    @Body() businessUpdateDto: BusinessUpdateDto,
-  ) {
-    console.log('what we got... ', businessUpdateDto);
-    return this.businessService.updateBusinessStatus(id, businessUpdateDto);
+    return this.businessService.updateBusiness(
+      id,
+      businessUpdateDto,
+      files.logo,
+      files.banner,
+    );
   }
 
   @Delete(':id')
