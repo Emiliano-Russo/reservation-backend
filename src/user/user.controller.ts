@@ -21,14 +21,14 @@ export class UserController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor('userImage')) // 'userImage' es el nombre del campo en tu formulario
+  @UseInterceptors(FileInterceptor('profileImage')) // 'userImage' es el nombre del campo en tu formulario
   async create(
-    @UploadedFile() userImage: any,
+    @UploadedFile() profileImage: any,
     @Body() createUserDto: CreateUserDto,
   ) {
     // createUserDto.emailVerified =
     //   createUserDto.emailVerified == 'true' ? true : false;
     console.log('what we recive: ', createUserDto);
-    return this.userService.createUser(createUserDto, userImage);
+    return this.userService.createUser(createUserDto, profileImage);
   }
 }

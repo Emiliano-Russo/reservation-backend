@@ -4,11 +4,9 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { S3Service } from 'src/shared/s3.service';
-import { readFileSync } from 'fs';
-import { ReservationService } from 'src/reservation/reservation.service';
-import { ReservationController } from 'src/reservation/reservation.controller';
 import { AuthService } from 'src/auth/auth.service';
 import { MailService } from 'src/mail/mail.service';
+import { ReservationService } from 'src/reservation/reservation.service';
 
 @Injectable()
 export class UserService {
@@ -23,7 +21,7 @@ export class UserService {
     return User.get(id);
   }
 
-  async createUser(data: CreateUserDto, userImage: any) {
+  async createUser(data: CreateUserDto, profileImage: any) {
     console.log('creating user...');
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -36,13 +34,14 @@ export class UserService {
     }
 
     let imageLink;
-    if (userImage) {
+    if (profileImage) {
       console.log('uploading user image...');
-      // Subir la imagen de perfil al almacenamiento S3 y obtener la URL
-      imageLink = await this.s3Service.uploadFile(
-        'avatars/' + userImage.fieldname,
-        userImage,
-      );
+      const idImage = uuidv4();
+      const sanitizedFilename = profileImage.originalname.replace(/\s+/g, '');
+      profileImage.originalname = idImage + sanitizedFilename;
+      const folderS3 = 'avatars/';
+      await this.s3Service.uploadFile(profileImage, folderS3);
+      imageLink = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/${folderS3}${profileImage.originalname}`;
       console.log('el result: ', imageLink);
     }
 
