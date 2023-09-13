@@ -35,7 +35,7 @@ export class ReservationCreateDto {
 
   @IsString()
   @IsNotEmpty()
-  reservationDate: string;
+  date: string;
 
   @IsString()
   @IsNotEmpty()

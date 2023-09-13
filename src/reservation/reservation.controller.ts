@@ -8,9 +8,10 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ReservationService } from './reservation.service';
 import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
+import { ReservationService } from './reservation.service';
+import { RatingDto } from './entities/rating.dto';
 
 @Controller('reservation')
 export class ReservationController {
@@ -32,6 +33,11 @@ export class ReservationController {
     @Body() updateReservationDto: ReservationUpdateDto,
   ) {
     return this.reservationService.updateReservation(id, updateReservationDto);
+  }
+
+  @Patch('rate/:id')
+  async rateReservation(@Param('id') id: string, @Body() ratingDto: RatingDto) {
+    return this.reservationService.rateReservation(id, ratingDto);
   }
 
   @Delete(':id')

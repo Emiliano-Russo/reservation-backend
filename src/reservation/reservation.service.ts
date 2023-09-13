@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { NotFoundException } from '@nestjs/common';
 import { BusinessService } from 'src/business/business.service';
+import { RatingDto } from './entities/rating.dto';
 
 @Injectable()
 export class ReservationService {
@@ -20,9 +21,12 @@ export class ReservationService {
   async createReservation(
     createReservationDto: ReservationCreateDto,
   ): Promise<any> {
+    console.log('el id: ', createReservationDto.businessId);
     const business = await this.businessService.getBusinessById(
-      createReservationDto.id,
+      createReservationDto.businessId,
     );
+
+    console.log('Original reservation date:', createReservationDto.date);
 
     if (business == undefined)
       throw new NotFoundException('Business Not Found');
@@ -32,12 +36,17 @@ export class ReservationService {
       userId: createReservationDto.userId,
       businessId: createReservationDto.businessId,
       businessName: business.name,
-      reservationDate: new Date(createReservationDto.reservationDate),
+      reservationDate: new Date(createReservationDto.date),
       status: createReservationDto.status, // Aquí asumimos que el estado que proviene del DTO ya es válido. Si no es así, se podría validar o configurar un estado predeterminado.
       extras: createReservationDto.extras, // Esto se añade directamente si existe en el DTO. Si no, el valor será undefined, lo cual está permitido por el esquema.
+      rating: 0,
+      comment: '',
       createdAt: new Date(),
     });
 
+    console.log('Reservation data:', reservation);
+
+    console.log('saving...');
     return await reservation.save();
   }
 
@@ -60,6 +69,21 @@ export class ReservationService {
     if (updateDto.status) {
       updateData.status = updateDto.status;
     }
+
+    return Reservation.update(id, updateData);
+  }
+
+  async rateReservation(id: string, ratingDto: RatingDto): Promise<any> {
+    const reservation = await Reservation.get(id);
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    const updateData: any = {
+      rating: ratingDto.rating,
+      comment: ratingDto.comment,
+    };
 
     return Reservation.update(id, updateData);
   }

@@ -22,6 +22,8 @@ const ReservationSchema = new dynamoose.Schema({
   businessId: { type: String, required: true },
   businessName: { type: String, required: true },
   reservationDate: { type: Date, required: true },
+  rating: { type: Number, required: false, default: null },
+  comment: { type: String, required: false, default: null },
   status: {
     type: String,
     enum: Object.values(ReservationStatus),
@@ -46,6 +48,8 @@ export interface IReservation extends AnyItem {
   userId: string;
   businessId: string;
   businessName: string;
+  rating: number;
+  comment: string;
   reservationDate: Date;
   status: ReservationStatus;
   extras?: IExtra[];
