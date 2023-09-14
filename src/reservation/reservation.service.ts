@@ -19,6 +19,11 @@ export class ReservationService {
     return reservations;
   }
 
+  async getReservationsByUserId(userId: string) {
+    const reservations = await Reservation.scan('userId').eq(userId).exec();
+    return reservations;
+  }
+
   async createReservation(
     createReservationDto: ReservationCreateDto,
   ): Promise<any> {

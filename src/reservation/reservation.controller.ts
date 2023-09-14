@@ -18,8 +18,13 @@ export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Get()
-  async getReservations(@Query('businessId') businessId: string) {
-    return this.reservationService.getReservationByBusinessId(businessId);
+  async getReservations(
+    @Query('businessId') businessId?: string,
+    @Query('userId') userId?: string,
+  ) {
+    if (businessId)
+      return this.reservationService.getReservationByBusinessId(businessId);
+    if (userId) return this.reservationService.getReservationsByUserId(userId);
   }
 
   @Post()
