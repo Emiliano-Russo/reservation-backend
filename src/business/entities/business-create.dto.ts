@@ -27,11 +27,15 @@ export class BusinessCreateDto {
 
   @IsString()
   @IsNotEmpty()
+  department: string;
+
+  @IsString()
+  @IsNotEmpty()
   address: string;
 
   @IsObject()
   @IsNotEmpty()
-  coordinates: object; // <-- Considerar una validación más específica aquí
+  coordinates: any; // <-- Considerar una validación más específica aquí
 
   @IsString()
   @IsOptional()

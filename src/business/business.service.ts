@@ -135,6 +135,7 @@ export class BusinessService {
       typeId: businessCreateDto.typeId,
       name: businessCreateDto.name,
       country: businessCreateDto.country,
+      department: businessCreateDto.department,
       address: businessCreateDto.address,
       coordinates: businessCreateDto.coordinates,
       logoURL: logoUrl,
