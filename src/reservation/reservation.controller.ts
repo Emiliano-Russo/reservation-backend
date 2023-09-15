@@ -12,10 +12,20 @@ import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { ReservationService } from './reservation.service';
 import { RatingDto } from './entities/rating.dto';
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 
 @Controller('reservation')
 export class ReservationController {
-  constructor(private readonly reservationService: ReservationService) {}
+  constructor(private readonly reservationService: ReservationService) { }
+
+
+  @Get()
+  async getReservationPaginatedByBusinessId(
+    @Query('businessId') businessId: string,
+    @Body() pagination: PaginationParametersDto
+  ) {
+    return this.reservationService.getReservationPaginatedByBusinessId(businessId, pagination);
+  }
 
   @Get()
   async getReservations(

@@ -4,13 +4,28 @@ import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { NotFoundException } from '@nestjs/common';
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
 
 @Injectable()
 export class ReservationService {
-  constructor(private businessService: BusinessService) {}
+  constructor(private businessService: BusinessService) { }
+
+  async getReservationPaginatedByBusinessId(businessId: string, pagination: PaginationParametersDto) {
+    let reservations = await Reservation.scan('businessId').eq(businessId).limit(pagination.limit);
+
+    if (pagination.lastKey) {
+      reservations = reservations.startAt(pagination.lastKey);
+    }
+
+    const result = await reservations.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
+  }
 
   async getReservationByBusinessId(businessId: string) {
     const reservations = await Reservation.scan('businessId')
