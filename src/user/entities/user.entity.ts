@@ -1,4 +1,5 @@
 import * as dynamoose from 'dynamoose';
+import { AnyItem } from 'dynamoose/dist/Item';
 
 const UserSchema = new dynamoose.Schema({
   createdAt: { type: Date, default: Date.now },
@@ -16,4 +17,12 @@ const UserSchema = new dynamoose.Schema({
   lastLogin: { type: Date, required: false },
 });
 
-export const User = dynamoose.model('User', UserSchema);
+export interface IUser extends AnyItem {
+  name: String,
+  email: String,
+  phone: String,
+  civilIdDoc: String,
+  profileImage: String,
+}
+
+export const User = dynamoose.model<IUser>('User', UserSchema);

@@ -1,12 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './entities/user.dto';
 import * as bcrypt from 'bcrypt';
-import { User } from './entities/user.entity';
+import { IUser, User } from './entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { S3Service } from 'src/shared/s3.service';
 import { AuthService } from 'src/auth/auth.service';
 import { MailService } from 'src/mail/mail.service';
 import { ReservationService } from 'src/reservation/reservation.service';
+import { UpdateUserDto } from './entities/user-update.dto';
 
 @Injectable()
 export class UserService {
@@ -15,7 +16,7 @@ export class UserService {
     private reservation: ReservationService,
     private authService: AuthService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   async getUser(id: string) {
     return User.get(id);
@@ -70,6 +71,38 @@ export class UserService {
     console.log('finalmente el token: ', token);
 
     return { user: createdUser, token: token.access_token };
+  }
+
+  async updateBusiness(
+    id: string,
+    updateData: UpdateUserDto,
+    profileImage?: any,
+  ): Promise<IUser> {
+    const user = await User.get(id);
+    console.log('el usuario:', user);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    if (profileImage) {
+      console.log('updating profile image: ', profileImage);
+      const sanitizedFilename = profileImage[0].originalname.replace(/\s+/g, '');
+      profileImage[0].originalname = sanitizedFilename;
+      await this.s3Service.uploadFile(
+        profileImage[0],
+        `user/${user.email}/profile/`,
+      );
+      user.profileImage = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/user/${user.email}/profile/${sanitizedFilename}`;
+    }
+
+    for (const key in updateData) {
+      if (Object.prototype.hasOwnProperty.call(updateData, key)) {
+        user[key] = updateData[key];
+      }
+    }
+
+    await user.save();
+    return user;
   }
 
   async findOneByEmail(email: string): Promise<any> {
