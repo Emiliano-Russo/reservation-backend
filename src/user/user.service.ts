@@ -86,13 +86,11 @@ export class UserService {
 
     if (profileImage) {
       console.log('updating profile image: ', profileImage);
-      const sanitizedFilename = profileImage[0].originalname.replace(/\s+/g, '');
-      profileImage[0].originalname = sanitizedFilename;
-      await this.s3Service.uploadFile(
-        profileImage[0],
-        `user/${user.email}/profile/`,
-      );
-      user.profileImage = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/user/${user.email}/profile/${sanitizedFilename}`;
+      profileImage.originalname = user.profileImage;
+      const folderS3 = 'avatars/';
+      await this.s3Service.uploadFile(profileImage, folderS3);
+      user.profileImage = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/${folderS3}${profileImage.originalname}`;
+      console.log('el result: ', user.profileImage);
     }
 
     for (const key in updateData) {

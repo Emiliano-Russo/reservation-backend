@@ -18,6 +18,7 @@ const UserSchema = new dynamoose.Schema({
 });
 
 export interface IUser extends AnyItem {
+  id: String,
   name: String,
   email: String,
   phone: String,
