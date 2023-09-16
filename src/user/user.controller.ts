@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -10,14 +11,26 @@ import {
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './entities/user.dto';
+import { UpdateUserDto } from './entities/user-update.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get(':userId')
   async get(@Param('userId') userId: string) {
     return this.userService.getUser(userId);
+  }
+
+  @Patch(':id')
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async update(
+    @Param('id') id: string,
+    @UploadedFile() profileImage: any,
+    @Body() updateUserDto: UpdateUserDto
+  ) {
+    console.log('what we recive: ', updateUserDto);
+    return this.userService.updateUser(id, updateUserDto, profileImage);
   }
 
   @Post()

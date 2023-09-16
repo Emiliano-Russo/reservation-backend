@@ -73,7 +73,7 @@ export class UserService {
     return { user: createdUser, token: token.access_token };
   }
 
-  async updateBusiness(
+  async updateUser(
     id: string,
     updateData: UpdateUserDto,
     profileImage?: any,
@@ -94,7 +94,8 @@ export class UserService {
     }
 
     for (const key in updateData) {
-      if (Object.prototype.hasOwnProperty.call(updateData, key)) {
+      if (Object.prototype.hasOwnProperty.call(updateData, key)
+        && !(updateData.password != null && updateData[key] == updateData.password)) {
         user[key] = updateData[key];
       }
     }
