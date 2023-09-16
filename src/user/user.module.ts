@@ -6,7 +6,11 @@ import { ReservationModule } from 'src/reservation/reservation.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { MailModule } from 'src/mail/mail.module';
 @Module({
-  imports: [ReservationModule, forwardRef(() => AuthModule), MailModule],
+  imports: [
+    forwardRef(() => ReservationModule),
+    forwardRef(() => AuthModule),
+    MailModule,
+  ],
   controllers: [UserController],
   providers: [UserService, S3Service],
   exports: [UserService],
