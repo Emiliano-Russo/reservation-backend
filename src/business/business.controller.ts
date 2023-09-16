@@ -23,7 +23,7 @@ import {
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) {}
+  constructor(private readonly businessService: BusinessService) { }
 
   @Post()
   @UseInterceptors(
@@ -67,6 +67,14 @@ export class BusinessController {
       files.logo ? files.logo[0] : undefined,
       files.banner ? files.banner[0] : undefined,
     );
+  }
+
+  @Get('businessSearch')
+  async searchBusinessByName(
+    @Query('name') name: string
+  ) {
+    const business = await this.businessService.searchBusinessByName(name);
+    return business;
   }
 
   @Get()

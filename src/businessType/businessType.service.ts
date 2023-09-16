@@ -6,7 +6,21 @@ import { BusinessTypeUpdateDto } from './entities/businessType-update.dto';
 
 @Injectable()
 export class BusinessTypeService {
-  constructor() {}
+  constructor() { }
+
+  async searchBusinessTypesByName(name: string) {
+    if (name === undefined) {
+      throw new Error('name cannot be undefined');
+    }
+
+    const params = {
+      FilterExpression: 'contains(#name, :name)',
+      ExpressionAttributeNames: { '#name': 'name' },
+      ExpressionAttributeValues: { ':name': name },
+    };
+
+    return await BusinessType.scan(params).exec();
+  }
 
   async getBusinessTypes() {
     const businessTypes = await BusinessType.scan().exec();

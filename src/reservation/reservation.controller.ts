@@ -15,7 +15,14 @@ import { RatingDto } from './entities/rating.dto';
 
 @Controller('reservation')
 export class ReservationController {
-  constructor(private readonly reservationService: ReservationService) {}
+  constructor(private readonly reservationService: ReservationService) { }
+
+  @Get('reservationSearch')
+  async searchReservationByBusinessName(
+    @Query('businessName') businessName: string
+  ) {
+    return this.reservationService.searchReservationByBusinessName(businessName);
+  }
 
   @Get()
   async getReservations(

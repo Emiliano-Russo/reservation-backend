@@ -16,7 +16,14 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('businessType')
 export class BusinessTypeController {
-  constructor(private readonly businessTypeService: BusinessTypeService) {}
+  constructor(private readonly businessTypeService: BusinessTypeService) { }
+
+  @Get('businessTypeSearch')
+  async searchBusinessTypesByName(
+    @Query('name') name: string
+  ) {
+    return this.businessTypeService.searchBusinessTypesByName(name);
+  }
 
   // @UseGuards(JwtAuthGuard)
   @Get()

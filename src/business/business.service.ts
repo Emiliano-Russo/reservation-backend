@@ -16,7 +16,21 @@ import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly s3Service: S3Service) {}
+  constructor(private readonly s3Service: S3Service) { }
+
+  async searchBusinessByName(name: string) {
+    if (name === undefined) {
+      throw new Error('name cannot be undefined');
+    }
+
+    const params = {
+      FilterExpression: 'contains(#name, :name)',
+      ExpressionAttributeNames: { '#name': 'name' },
+      ExpressionAttributeValues: { ':name': name },
+    };
+
+    return await Business.scan(params).exec();
+  }
 
   async getBusinessById(id: string) {
     const business = await Business.get(id);

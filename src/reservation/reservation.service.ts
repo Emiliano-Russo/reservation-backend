@@ -10,13 +10,27 @@ import { Business } from 'src/business/entities/business.entity';
 
 @Injectable()
 export class ReservationService {
-  constructor(private businessService: BusinessService) {}
+  constructor(private businessService: BusinessService) { }
 
   async getReservationByBusinessId(businessId: string) {
     const reservations = await Reservation.scan('businessId')
       .eq(businessId)
       .exec();
     return reservations;
+  }
+
+  async searchReservationByBusinessName(businessName: string) {
+    if (businessName === undefined) {
+      throw new Error('businessName cannot be undefined');
+    }
+
+    const params = {
+      FilterExpression: 'contains(#businessName, :businessName)',
+      ExpressionAttributeNames: { '#businessName': 'businessName' },
+      ExpressionAttributeValues: { ':businessName': businessName },
+    };
+
+    return await Reservation.scan(params).exec();
   }
 
   async getReservationsByUserId(userId: string) {
