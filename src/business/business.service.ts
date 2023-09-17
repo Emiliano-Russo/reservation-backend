@@ -12,14 +12,18 @@ import { BusinessUpdateDto } from './entities/business-update.dto';
 import { User } from 'src/user/entities/user.entity';
 import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
-import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
 import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
+import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 
 @Injectable()
 export class BusinessService {
   constructor(private readonly s3Service: S3Service) {}
 
-  async getBusinessByOwnerId(ownerId: string, limit: number, lastKey: string) {
+  async getBusinessByOwnerId(
+    ownerId: string,
+    limit: number,
+    lastKey: string,
+  ): Promise<PaginatedResponse> {
     let business = await Business.scan('ownerId').eq(ownerId).limit(limit);
 
     if (lastKey) {
