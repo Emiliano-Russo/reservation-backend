@@ -13,14 +13,33 @@ import { User } from 'src/user/entities/user.entity';
 import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
 import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
-import { PaginationParametersDto } from "src/helpers/pagination-parameters.dto";
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly s3Service: S3Service) { }
+  constructor(private readonly s3Service: S3Service) {}
 
-  async getBusinessPaginatedByOwnerId(ownerId: string, pagination: PaginationParametersDto) {
-    let business = await Business.scan("ownerId").eq(ownerId).limit(pagination.limit);
+  async getBusinessByOwnerId(ownerId: string, limit: number, lastKey: string) {
+    let business = await Business.scan('ownerId').eq(ownerId).limit(limit);
+
+    if (lastKey) {
+      business = business.startAt({ id: lastKey });
+    }
+
+    const result = await business.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
+  }
+
+  async getBusinessPaginatedByTypeId(
+    typeId: string,
+    pagination: PaginationParametersDto,
+  ) {
+    let business = await Business.scan('typeId')
+      .eq(typeId)
+      .limit(pagination.limit);
 
     if (pagination.lastKey) {
       business = business.startAt(pagination.lastKey);
@@ -33,22 +52,13 @@ export class BusinessService {
     };
   }
 
-  async getBusinessPaginatedByTypeId(typeId: string, pagination: PaginationParametersDto) {
-    let business = await Business.scan("typeId").eq(typeId).limit(pagination.limit);
-
-    if (pagination.lastKey) {
-      business = business.startAt(pagination.lastKey);
-    }
-
-    const result = await business.exec();
-    return {
-      items: result,
-      lastKey: result.lastKey || null,
-    };
-  }
-
-  async getBusinessPaginatedByActivePremiumSubscriptionId(activePremiumSubscriptionID: string, pagination: PaginationParametersDto) {
-    let business = await Business.scan("activePremiumSubscriptionID").eq(activePremiumSubscriptionID).limit(pagination.limit);
+  async getBusinessPaginatedByActivePremiumSubscriptionId(
+    activePremiumSubscriptionID: string,
+    pagination: PaginationParametersDto,
+  ) {
+    let business = await Business.scan('activePremiumSubscriptionID')
+      .eq(activePremiumSubscriptionID)
+      .limit(pagination.limit);
 
     if (pagination.lastKey) {
       business = business.startAt(pagination.lastKey);
@@ -63,11 +73,6 @@ export class BusinessService {
 
   async getBusinessById(id: string) {
     const business = await Business.get(id);
-    return business;
-  }
-
-  async getBusinessByOwnerId(ownerId: string): Promise<any> {
-    const business = await Business.scan('ownerId').eq(ownerId).exec();
     return business;
   }
 

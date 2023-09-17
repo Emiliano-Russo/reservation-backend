@@ -20,35 +20,11 @@ import {
   FileInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
-import { PaginationParametersDto } from "src/helpers/pagination-parameters.dto";
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) { }
-
-  @Get("/owner")
-  async getBusinessPaginatedByOwnerId(
-    @Query('ownerId') ownerId: string,
-    @Body() pagination: PaginationParametersDto
-  ) {
-    return this.businessService.getBusinessPaginatedByOwnerId(ownerId, pagination);
-  }
-
-  @Get("/type")
-  async getBusinessPaginatedByTypeId(
-    @Query('typeId') typeId: string,
-    @Body() pagination: PaginationParametersDto
-  ) {
-    return this.businessService.getBusinessPaginatedByTypeId(typeId, pagination);
-  }
-
-  @Get("/premiumSubscription")
-  async getBusinessPaginatedByActivePremiumSubscriptionId(
-    @Query('activePremiumSubscriptionId') activePremiumSubscriptionId: string,
-    @Body() pagination: PaginationParametersDto
-  ) {
-    return this.businessService.getBusinessPaginatedByActivePremiumSubscriptionId(activePremiumSubscriptionId, pagination);
-  }
+  constructor(private readonly businessService: BusinessService) {}
 
   @Post()
   @UseInterceptors(
@@ -100,11 +76,17 @@ export class BusinessController {
     @Query('ownerId') ownerId?: string,
     @Query('typeId') typeId?: string,
     @Query('activePremiumSubscriptionId') activePremiumSubscriptionId?: string,
+    @Query('limit') limit?: string,
+    @Query('lastKey') lastKey?: string,
   ) {
     if (businessId) {
       return this.businessService.getBusinessById(businessId);
     } else if (ownerId) {
-      return this.businessService.getBusinessByOwnerId(ownerId);
+      return this.businessService.getBusinessByOwnerId(
+        ownerId,
+        parseInt(limit),
+        lastKey,
+      );
     } else if (typeId) {
       return this.businessService.getBusinessByTypeId(typeId);
     } else if (activePremiumSubscriptionId) {
