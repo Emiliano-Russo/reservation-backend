@@ -16,7 +16,7 @@ import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly s3Service: S3Service) {}
+  constructor(private readonly s3Service: S3Service) { }
 
   async getBusinessById(id: string) {
     const business = await Business.get(id);
@@ -134,6 +134,7 @@ export class BusinessService {
       ownerId: businessCreateDto.ownerId,
       typeId: businessCreateDto.typeId,
       name: businessCreateDto.name,
+      nameInsensitive: businessCreateDto.nameInsensitive,
       country: businessCreateDto.country,
       department: businessCreateDto.department,
       address: businessCreateDto.address,

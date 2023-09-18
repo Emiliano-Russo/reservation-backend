@@ -38,7 +38,11 @@ const BusinessSchema = new dynamoose.Schema({
   ownerId: { type: String, required: true },
   typeId: { type: String, required: true },
   name: { type: String, required: true },
-  nameInsensitive: { type: String, required: true },
+  nameInsensitive: {
+    type: String,
+    set: (value) => (value as String).toLowerCase(),
+    required: true
+  },
   country: { type: String, required: true },
   department: { type: String, required: true },
   address: { type: String, required: true },

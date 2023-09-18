@@ -37,6 +37,10 @@ export class BusinessTypeUpdateDto {
 
   @IsString()
   @IsOptional()
+  nameInsensitive?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
 
   @IsString()

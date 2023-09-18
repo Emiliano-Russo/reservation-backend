@@ -6,7 +6,7 @@ import { BusinessTypeUpdateDto } from './entities/businessType-update.dto';
 
 @Injectable()
 export class BusinessTypeService {
-  constructor() {}
+  constructor() { }
 
   async getBusinessTypes() {
     const businessTypes = await BusinessType.scan().exec();
@@ -24,6 +24,7 @@ export class BusinessTypeService {
     const businessType = new BusinessType({
       id: uuidv4(),
       name: createBusinessTypeDto.name,
+      nameInsensitive: createBusinessTypeDto.nameInsensitive,
       description: createBusinessTypeDto.description,
       icon: createBusinessTypeDto.icon,
       controls: createBusinessTypeDto.controls,

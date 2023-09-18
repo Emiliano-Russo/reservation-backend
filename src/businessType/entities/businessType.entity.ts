@@ -25,7 +25,11 @@ const ControlSchema = new dynamoose.Schema(
 const BusinessTypeSchema = new dynamoose.Schema({
   id: { type: String, hashKey: true },
   name: { type: String, required: true },
-  nameInsensitive: { type: String, required: true },
+  nameInsensitive: {
+    type: String,
+    set: (value, _) => (value as string).toLowerCase(),
+    required: true
+  },
   description: { type: String },
   icon: { type: String, required: true },
   controls: {

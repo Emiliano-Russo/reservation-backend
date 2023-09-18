@@ -23,6 +23,10 @@ export class BusinessCreateDto {
 
   @IsString()
   @IsNotEmpty()
+  nameInsensitive: string;
+
+  @IsString()
+  @IsNotEmpty()
   country: string;
 
   @IsString()
