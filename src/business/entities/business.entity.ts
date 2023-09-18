@@ -38,6 +38,7 @@ const BusinessSchema = new dynamoose.Schema({
   ownerId: { type: String, required: true },
   typeId: { type: String, required: true },
   name: { type: String, required: true },
+  nameInsensitive: { type: String, required: true },
   country: { type: String, required: true },
   department: { type: String, required: true },
   address: { type: String, required: true },
@@ -64,6 +65,7 @@ export interface IBusiness extends AnyItem {
   ownerId: String;
   typeId: String;
   name: String;
+  nameInsensitive: String;
   country: String;
   department: String;
   address: String;

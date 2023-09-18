@@ -25,6 +25,7 @@ const ControlSchema = new dynamoose.Schema(
 const BusinessTypeSchema = new dynamoose.Schema({
   id: { type: String, hashKey: true },
   name: { type: String, required: true },
+  nameInsensitive: { type: String, required: true },
   description: { type: String },
   icon: { type: String, required: true },
   controls: {
@@ -45,6 +46,7 @@ export interface IControl {
 export interface IBusinessType extends AnyItem {
   id: String;
   name: String;
+  nameInsensitive: String;
   description: String;
   icon: String;
   controls?: IControl[];
