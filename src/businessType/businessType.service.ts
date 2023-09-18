@@ -9,11 +9,14 @@ import { PaginationParametersDto } from "src/helpers/pagination-parameters.dto";
 export class BusinessTypeService {
     constructor() { }
 
-    async getBusinessTypesPaginated(pagination: PaginationParametersDto) {
-        let businessTypes = await BusinessType.scan().limit(pagination.limit);
+    async getBusinessTypes(
+        limit: number,
+        lastKey: string,
+    ) {
+        let businessTypes = await BusinessType.scan().limit(limit);
 
-        if (pagination.lastKey) {
-            businessTypes = businessTypes.startAt(pagination.lastKey);
+        if (lastKey) {
+            businessTypes = businessTypes.startAt({ id: lastKey });
         }
 
         const result = await businessTypes.exec();
@@ -21,11 +24,6 @@ export class BusinessTypeService {
             items: result,
             lastKey: result.lastKey || null,
         };
-    }
-
-    async getBusinessTypes() {
-        const businessTypes = await BusinessType.scan().exec();
-        return businessTypes;
     }
 
     async getBusinessType(id: string) {

@@ -18,23 +18,17 @@ import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) { }
 
-
-  @Get()
-  async getReservationPaginatedByBusinessId(
-    @Query('businessId') businessId: string,
-    @Body() pagination: PaginationParametersDto
-  ) {
-    return this.reservationService.getReservationPaginatedByBusinessId(businessId, pagination);
-  }
-
   @Get()
   async getReservations(
     @Query('businessId') businessId?: string,
     @Query('userId') userId?: string,
+    @Query('limit') limit?: string,
+    @Query('lasyKey') lastKey?: string,
   ) {
     if (businessId)
-      return this.reservationService.getReservationByBusinessId(businessId);
-    if (userId) return this.reservationService.getReservationsByUserId(userId);
+      return this.reservationService.getReservationByBusinessId(businessId, parseInt(limit), lastKey);
+    if (userId)
+      return this.reservationService.getReservationsByUserId(userId, parseInt(limit), lastKey);
   }
 
   @Post()

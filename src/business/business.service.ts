@@ -12,12 +12,11 @@ import { BusinessUpdateDto } from './entities/business-update.dto';
 import { User } from 'src/user/entities/user.entity';
 import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
-import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly s3Service: S3Service) {}
+  constructor(private readonly s3Service: S3Service) { }
 
   async getBusinessByOwnerId(
     ownerId: string,
@@ -37,16 +36,15 @@ export class BusinessService {
     };
   }
 
-  async getBusinessPaginatedByTypeId(
+  async getBusinessByTypeId(
     typeId: string,
-    pagination: PaginationParametersDto,
-  ) {
-    let business = await Business.scan('typeId')
-      .eq(typeId)
-      .limit(pagination.limit);
+    limit: number,
+    lastKey: string,
+  ): Promise<PaginatedResponse> {
+    let business = await Business.scan('typeId').eq(typeId).limit(limit);
 
-    if (pagination.lastKey) {
-      business = business.startAt(pagination.lastKey);
+    if (lastKey) {
+      business = business.startAt({ id: lastKey });
     }
 
     const result = await business.exec();
@@ -56,16 +54,15 @@ export class BusinessService {
     };
   }
 
-  async getBusinessPaginatedByActivePremiumSubscriptionId(
+  async getBusinessByActivePremiumSubscriptionId(
     activePremiumSubscriptionID: string,
-    pagination: PaginationParametersDto,
-  ) {
-    let business = await Business.scan('activePremiumSubscriptionID')
-      .eq(activePremiumSubscriptionID)
-      .limit(pagination.limit);
+    limit: number,
+    lastKey: string,
+  ): Promise<PaginatedResponse> {
+    let business = await Business.scan('activePremiumSubscriptionID').eq(activePremiumSubscriptionID).limit(limit);
 
-    if (pagination.lastKey) {
-      business = business.startAt(pagination.lastKey);
+    if (lastKey) {
+      business = business.startAt({ id: lastKey });
     }
 
     const result = await business.exec();
@@ -77,20 +74,6 @@ export class BusinessService {
 
   async getBusinessById(id: string) {
     const business = await Business.get(id);
-    return business;
-  }
-
-  async getBusinessByTypeId(typeId: string): Promise<any> {
-    const business = await Business.scan('typeId').eq(typeId).exec();
-    return business;
-  }
-
-  async getBusinessByActivePremiumSubscriptionId(
-    activePremiumSubscriptionID: string,
-  ): Promise<any> {
-    const business = await Business.scan('activePremiumSubscriptionID')
-      .eq(activePremiumSubscriptionID)
-      .exec();
     return business;
   }
 

@@ -13,11 +13,15 @@ import { Business } from 'src/business/entities/business.entity';
 export class ReservationService {
   constructor(private businessService: BusinessService) { }
 
-  async getReservationPaginatedByBusinessId(businessId: string, pagination: PaginationParametersDto) {
-    let reservations = await Reservation.scan('businessId').eq(businessId).limit(pagination.limit);
+  async getReservationByBusinessId(
+    businessId: string,
+    limit: number,
+    lastKey: string
+  ) {
+    let reservations = await Reservation.scan('businessId').eq(businessId).limit(limit);
 
-    if (pagination.lastKey) {
-      reservations = reservations.startAt(pagination.lastKey);
+    if (lastKey) {
+      reservations = reservations.startAt({ id: lastKey });
     }
 
     const result = await reservations.exec();
@@ -27,16 +31,22 @@ export class ReservationService {
     };
   }
 
-  async getReservationByBusinessId(businessId: string) {
-    const reservations = await Reservation.scan('businessId')
-      .eq(businessId)
-      .exec();
-    return reservations;
-  }
+  async getReservationsByUserId(
+    userId: string,
+    limit: number,
+    lastKey: string
+  ) {
+    let reservations = await Reservation.scan('userId').eq(userId).limit(limit);
 
-  async getReservationsByUserId(userId: string) {
-    const reservations = await Reservation.scan('userId').eq(userId).exec();
-    return reservations;
+    if (lastKey) {
+      reservations = reservations.startAt({ id: lastKey });
+    }
+
+    const result = await reservations.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
   }
 
   async createReservation(

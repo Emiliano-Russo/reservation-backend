@@ -23,11 +23,13 @@ export class BusinessTypeController {
     @Get()
     async getBusinessTypesOrType(
         @Query('businessTypeId') businessTypeId?: string,
+        @Query('limit') limit?: string,
+        @Query('lastKey') lastKey?: string,
     ) {
         if (businessTypeId) {
             return this.businessTypeService.getBusinessType(businessTypeId);
         }
-        return this.businessTypeService.getBusinessTypes();
+        return this.businessTypeService.getBusinessTypes(parseInt(limit), lastKey);
     }
 
 
@@ -36,19 +38,6 @@ export class BusinessTypeController {
         @Body() createBusinessTypeDto: BusinessTypeCreateDto,
     ) {
         return this.businessTypeService.createBusinessType(createBusinessTypeDto);
-    }
-
-    @Get()
-    async getBusinessTypesPaginated(
-        @Body() pagination: PaginationParametersDto
-    ) {
-        return this.businessTypeService.getBusinessTypesPaginated(pagination);
-    }
-
-
-    @Get()
-    async getBusinessTypes() {
-        return this.businessTypeService.getBusinessTypes();
     }
 
     @Patch(':id')

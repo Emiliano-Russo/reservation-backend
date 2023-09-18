@@ -24,7 +24,7 @@ import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) {}
+  constructor(private readonly businessService: BusinessService) { }
 
   @Post()
   @UseInterceptors(
@@ -88,10 +88,16 @@ export class BusinessController {
         lastKey,
       );
     } else if (typeId) {
-      return this.businessService.getBusinessByTypeId(typeId);
+      return this.businessService.getBusinessByTypeId(
+        typeId,
+        parseInt(limit),
+        lastKey,
+      );
     } else if (activePremiumSubscriptionId) {
       return this.businessService.getBusinessByActivePremiumSubscriptionId(
         activePremiumSubscriptionId,
+        parseInt(limit),
+        lastKey,
       );
     } else {
       throw new BadRequestException('Invalid query parameters.');
