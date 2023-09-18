@@ -10,6 +10,28 @@ export enum ReservationStatus {
   NotAttended = 'NotAttended',
 }
 
+export enum AcceptStatus {
+  Unanswered = 'Unanswered',
+  Accepted = 'Accepted',
+  NotAccepted = 'NotAccepted',
+}
+
+const RangeSchema = new dynamoose.Schema({
+  start: { type: String, required: true },
+  end: { type: String, required: true },
+});
+
+const NegotiableSchema = new dynamoose.Schema({
+  dateRange: RangeSchema,
+  timeRange: RangeSchema,
+  businessProposedSchedule: { type: String, required: false },
+  acceptedBusinessProposed: {
+    type: String,
+    enum: Object.values(AcceptStatus),
+    required: false,
+  },
+});
+
 const ExtraSchema = new dynamoose.Schema({
   label: { type: String, required: true },
   value: { type: String, required: true },
@@ -22,7 +44,7 @@ const ReservationSchema = new dynamoose.Schema({
   businessId: { type: String, required: true },
   businessName: { type: String, required: true },
   userName: { type: String, required: true },
-  reservationDate: { type: Date, required: true },
+  reservationDate: { type: Date, required: false },
   rating: { type: Number, required: false, default: null },
   comment: { type: String, required: false, default: null },
   status: {
@@ -35,8 +57,24 @@ const ReservationSchema = new dynamoose.Schema({
     schema: [ExtraSchema], // Esquema para los extras
     required: false,
   },
+  negotiable: {
+    type: Object,
+    schema: NegotiableSchema,
+    required: false,
+  },
   createdAt: { type: Date, default: Date.now },
 });
+
+interface Range {
+  start: any;
+  end?: any;
+}
+
+export interface Negotiable {
+  dateRange?: Range;
+  timeRange?: Range;
+  businessProposedSchedule?: String;
+}
 
 export interface IExtra {
   label: string;
@@ -51,9 +89,10 @@ export interface IReservation extends AnyItem {
   businessName: string;
   rating: number;
   comment: string;
-  reservationDate: Date;
+  reservationDate?: Date;
   status: ReservationStatus;
   extras?: IExtra[];
+  negotiable?: Negotiable;
   createdAt?: Date;
 }
 

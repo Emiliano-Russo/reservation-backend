@@ -7,6 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Negotiable } from './reservation.entity';
 
 class ExtraDto {
   @IsString()
@@ -23,8 +24,6 @@ class ExtraDto {
 }
 
 export class ReservationCreateDto {
-  id?: string;
-
   @IsString()
   @IsNotEmpty()
   userId: string;
@@ -34,16 +33,15 @@ export class ReservationCreateDto {
   businessId: string;
 
   @IsString()
-  @IsNotEmpty()
-  date: string;
-
-  @IsString()
-  @IsNotEmpty()
-  status: string;
+  @IsOptional()
+  date?: string;
 
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => ExtraDto)
   extras?: ExtraDto[];
+
+  @IsOptional()
+  negotiable?: Negotiable;
 }
