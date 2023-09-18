@@ -9,6 +9,7 @@ import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class ReservationService {
@@ -53,12 +54,10 @@ export class ReservationService {
   async createReservation(
     createReservationDto: ReservationCreateDto,
   ): Promise<any> {
-    console.log('el id: ', createReservationDto.businessId);
     const business = await this.businessService.getBusinessById(
       createReservationDto.businessId,
     );
-
-    console.log('Original reservation date:', createReservationDto.date);
+    const user = await User.get(createReservationDto.userId);
 
     if (business == undefined)
       throw new NotFoundException('Business Not Found');
@@ -68,6 +67,7 @@ export class ReservationService {
       userId: createReservationDto.userId,
       businessId: createReservationDto.businessId,
       businessName: business.name,
+      userName: user.name,
       reservationDate: new Date(createReservationDto.date),
       status: createReservationDto.status, // Aquí asumimos que el estado que proviene del DTO ya es válido. Si no es así, se podría validar o configurar un estado predeterminado.
       extras: createReservationDto.extras, // Esto se añade directamente si existe en el DTO. Si no, el valor será undefined, lo cual está permitido por el esquema.
