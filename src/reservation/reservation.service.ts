@@ -8,6 +8,7 @@ import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
+import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 
 @Injectable()
 export class ReservationService {
@@ -17,7 +18,7 @@ export class ReservationService {
     businessId: string,
     limit: number,
     lastKey: string
-  ) {
+  ): Promise<PaginatedResponse> {
     let reservations = await Reservation.scan('businessId').eq(businessId).limit(limit);
 
     if (lastKey) {
@@ -35,7 +36,7 @@ export class ReservationService {
     userId: string,
     limit: number,
     lastKey: string
-  ) {
+  ): Promise<PaginatedResponse> {
     let reservations = await Reservation.scan('userId').eq(userId).limit(limit);
 
     if (lastKey) {

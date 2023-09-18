@@ -4,6 +4,7 @@ import { BusinessTypeCreateDto } from './entities/businessType-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { BusinessTypeUpdateDto } from './entities/businessType-update.dto';
 import { PaginationParametersDto } from "src/helpers/pagination-parameters.dto";
+import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 
 @Injectable()
 export class BusinessTypeService {
@@ -12,7 +13,7 @@ export class BusinessTypeService {
     async getBusinessTypes(
         limit: number,
         lastKey: string,
-    ) {
+    ): Promise<PaginatedResponse> {
         let businessTypes = await BusinessType.scan().limit(limit);
 
         if (lastKey) {
