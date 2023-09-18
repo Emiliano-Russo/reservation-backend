@@ -70,6 +70,7 @@ export class ReservationService {
       userId: createReservationDto.userId,
       businessId: createReservationDto.businessId,
       businessName: business.name,
+      businessNameInsensitive: business.name,
       userName: user.name,
       reservationDate: new Date(createReservationDto.date),
       status: createReservationDto.status, // Aquí asumimos que el estado que proviene del DTO ya es válido. Si no es así, se podría validar o configurar un estado predeterminado.

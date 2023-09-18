@@ -163,6 +163,7 @@ export class BusinessService {
       ownerId: businessCreateDto.ownerId,
       typeId: businessCreateDto.typeId,
       name: businessCreateDto.name,
+      nameInsensitive: businessCreateDto.nameInsensitive,
       country: businessCreateDto.country,
       department: businessCreateDto.department,
       address: businessCreateDto.address,
