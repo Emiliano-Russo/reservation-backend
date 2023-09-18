@@ -174,6 +174,7 @@ export class ReservationService {
       const updateObj = {
         negotiable: undefined,
         reservationDate: new Date(date.toString()),
+        status: ReservationStatus.Confirmed,
       };
 
       return Reservation.update(id, updateObj);

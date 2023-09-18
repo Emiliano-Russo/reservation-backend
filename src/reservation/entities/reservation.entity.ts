@@ -18,7 +18,7 @@ export enum AcceptStatus {
 
 const RangeSchema = new dynamoose.Schema({
   start: { type: String, required: true },
-  end: { type: String, required: true },
+  end: { type: String, required: false },
 });
 
 const NegotiableSchema = new dynamoose.Schema({
@@ -74,6 +74,7 @@ export interface Negotiable {
   dateRange?: Range;
   timeRange?: Range;
   businessProposedSchedule?: String;
+  acceptedBusinessProposed?: AcceptStatus;
 }
 
 export interface IExtra {
@@ -87,6 +88,7 @@ export interface IReservation extends AnyItem {
   userId: string;
   businessId: string;
   businessName: string;
+  userName: string;
   rating: number;
   comment: string;
   reservationDate?: Date;
