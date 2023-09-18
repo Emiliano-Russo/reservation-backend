@@ -71,9 +71,11 @@ export class BusinessController {
 
   @Get('businessSearch')
   async searchBusinessByName(
-    @Query('name') name: string
+    @Query('name') name: string,
+    @Query('limit') limit?: string,
+    @Query('lastKey') lastKey?: string
   ) {
-    const business = await this.businessService.searchBusinessByName(name);
+    const business = await this.businessService.searchBusinessByName(name, parseInt(limit), lastKey);
     return business;
   }
 

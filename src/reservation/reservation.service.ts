@@ -7,6 +7,7 @@ import { NotFoundException } from '@nestjs/common';
 import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
+import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 
 @Injectable()
 export class ReservationService {
@@ -19,7 +20,11 @@ export class ReservationService {
     return reservations;
   }
 
-  async searchReservationByBusinessName(businessName: string) {
+  async searchReservationByBusinessName(
+    businessName: string,
+    limit?: number,
+    lastKey?: string
+  ): Promise<PaginatedResponse> {
     if (businessName === undefined) {
       throw new Error('businessName cannot be undefined');
     }
@@ -30,7 +35,17 @@ export class ReservationService {
       ExpressionAttributeValues: { ':businessName': businessName },
     };
 
-    return await Reservation.scan(params).exec();
+    let reservations = await Reservation.scan(params).limit(limit);
+
+    if (lastKey) {
+      reservations = reservations.startAt({ id: lastKey });
+    }
+
+    const result = await reservations.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
   }
 
   async getReservationsByUserId(userId: string) {

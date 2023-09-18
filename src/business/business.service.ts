@@ -13,12 +13,17 @@ import { User } from 'src/user/entities/user.entity';
 import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
 import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
+import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 
 @Injectable()
 export class BusinessService {
   constructor(private readonly s3Service: S3Service) { }
 
-  async searchBusinessByName(name: string) {
+  async searchBusinessByName(
+    name: string,
+    limit?: number,
+    lastKey?: string,
+  ): Promise<PaginatedResponse> {
     if (name === undefined) {
       throw new Error('name cannot be undefined');
     }
@@ -29,7 +34,17 @@ export class BusinessService {
       ExpressionAttributeValues: { ':name': name },
     };
 
-    return await Business.scan(params).exec();
+    let business = await Business.scan(params).limit(limit);
+
+    if (lastKey) {
+      business = business.startAt({ id: lastKey });
+    }
+
+    const result = await business.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
   }
 
   async getBusinessById(id: string) {

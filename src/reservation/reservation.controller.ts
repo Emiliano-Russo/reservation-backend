@@ -19,9 +19,11 @@ export class ReservationController {
 
   @Get('reservationSearch')
   async searchReservationByBusinessName(
-    @Query('businessName') businessName: string
+    @Query('businessName') businessName: string,
+    @Query('limit') limit?: string,
+    @Query('lastKey') lastKey?: string
   ) {
-    return this.reservationService.searchReservationByBusinessName(businessName);
+    return this.reservationService.searchReservationByBusinessName(businessName, parseInt(limit), lastKey);
   }
 
   @Get()

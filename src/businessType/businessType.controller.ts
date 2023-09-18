@@ -1,13 +1,13 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Query,
+    UseGuards,
 } from '@nestjs/common';
 import { BusinessTypeService } from './businessType.service';
 import { BusinessTypeCreateDto } from './entities/businessType-create.dto';
@@ -16,46 +16,48 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('businessType')
 export class BusinessTypeController {
-  constructor(private readonly businessTypeService: BusinessTypeService) { }
+    constructor(private readonly businessTypeService: BusinessTypeService) { }
 
-  @Get('businessTypeSearch')
-  async searchBusinessTypesByName(
-    @Query('name') name: string
-  ) {
-    return this.businessTypeService.searchBusinessTypesByName(name);
-  }
-
-  // @UseGuards(JwtAuthGuard)
-  @Get()
-  async getBusinessTypesOrType(
-    @Query('businessTypeId') businessTypeId?: string,
-  ) {
-    if (businessTypeId) {
-      return this.businessTypeService.getBusinessType(businessTypeId);
+    @Get('businessTypeSearch')
+    async searchBusinessTypesByName(
+        @Query('name') name: string,
+        @Query('limit') limit?: string,
+        @Query('lastKey') lastKey?: string
+    ) {
+        return this.businessTypeService.searchBusinessTypesByName(name, parseInt(limit), lastKey);
     }
-    return this.businessTypeService.getBusinessTypes();
-  }
 
-  @Post()
-  async createBusinessType(
-    @Body() createBusinessTypeDto: BusinessTypeCreateDto,
-  ) {
-    return this.businessTypeService.createBusinessType(createBusinessTypeDto);
-  }
+    // @UseGuards(JwtAuthGuard)
+    @Get()
+    async getBusinessTypesOrType(
+        @Query('businessTypeId') businessTypeId?: string,
+    ) {
+        if (businessTypeId) {
+            return this.businessTypeService.getBusinessType(businessTypeId);
+        }
+        return this.businessTypeService.getBusinessTypes();
+    }
 
-  @Patch(':id')
-  async updateBusinessType(
-    @Param('id') id: string,
-    @Body() updateBusinessTypeDto: BusinessTypeUpdateDto,
-  ) {
-    return this.businessTypeService.updateBusinessType(
-      id,
-      updateBusinessTypeDto,
-    );
-  }
+    @Post()
+    async createBusinessType(
+        @Body() createBusinessTypeDto: BusinessTypeCreateDto,
+    ) {
+        return this.businessTypeService.createBusinessType(createBusinessTypeDto);
+    }
 
-  @Delete(':id')
-  async removeBusinessType(@Param('id') id: string) {
-    return this.businessTypeService.removeBusinessType(id);
-  }
+    @Patch(':id')
+    async updateBusinessType(
+        @Param('id') id: string,
+        @Body() updateBusinessTypeDto: BusinessTypeUpdateDto,
+    ) {
+        return this.businessTypeService.updateBusinessType(
+            id,
+            updateBusinessTypeDto,
+        );
+    }
+
+    @Delete(':id')
+    async removeBusinessType(@Param('id') id: string) {
+        return this.businessTypeService.removeBusinessType(id);
+    }
 }
