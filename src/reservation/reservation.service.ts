@@ -1,5 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { Reservation, ReservationStatus } from './entities/reservation.entity';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  AcceptStatus,
+  Reservation,
+  ReservationStatus,
+} from './entities/reservation.entity';
 import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
@@ -43,11 +47,14 @@ export class ReservationService {
       businessId: createReservationDto.businessId,
       businessName: business.name,
       userName: user.name,
-      reservationDate: new Date(createReservationDto.date),
-      status: createReservationDto.status, // Aquí asumimos que el estado que proviene del DTO ya es válido. Si no es así, se podría validar o configurar un estado predeterminado.
-      extras: createReservationDto.extras, // Esto se añade directamente si existe en el DTO. Si no, el valor será undefined, lo cual está permitido por el esquema.
+      reservationDate: createReservationDto.date
+        ? new Date(createReservationDto.date)
+        : undefined,
+      status: ReservationStatus.Pending,
+      extras: createReservationDto.extras,
       rating: 0,
       comment: '',
+      negotiable: createReservationDto.negotiable,
       createdAt: new Date(),
     });
 
@@ -110,5 +117,81 @@ export class ReservationService {
     }
 
     return reservation.delete();
+  }
+
+  async businessProposedSchedule(id: string, date: string) {
+    const reservation = await Reservation.get(id);
+    console.log('#1');
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    if (reservation.status != ReservationStatus.Pending) {
+      throw new BadRequestException(
+        'This reservation is not longer on Pending State',
+      );
+    }
+
+    console.log('#2');
+
+    const businessDto = {
+      negotiable: {
+        dateRange: reservation.negotiable.dateRange,
+        timeRange: reservation.negotiable.timeRange,
+        businessProposedSchedule: date,
+        acceptedBusinessProposed: AcceptStatus.Unanswered,
+      },
+    };
+
+    console.log('#3', businessDto);
+
+    return Reservation.update(id, businessDto);
+  }
+
+  async userResponseProposedSchedule(id: string, value: AcceptStatus) {
+    const reservation = await Reservation.get(id);
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    if (reservation.status != ReservationStatus.Pending) {
+      throw new BadRequestException(
+        'This reservation is not longer on Pending State',
+      );
+    }
+
+    if (
+      value === AcceptStatus.Unanswered ||
+      !reservation.negotiable.dateRange
+    ) {
+      throw new BadRequestException('Invalid Data');
+    }
+
+    if (value === AcceptStatus.Accepted) {
+      const date = reservation.negotiable.businessProposedSchedule;
+      const updateObj = {
+        negotiable: undefined,
+        reservationDate: new Date(date.toString()),
+        status: ReservationStatus.Confirmed,
+      };
+
+      return Reservation.update(id, updateObj);
+    }
+
+    if (value === AcceptStatus.NotAccepted) {
+      const date = reservation.negotiable.businessProposedSchedule;
+      const updateObj = {
+        negotiable: {
+          dateRange: reservation.negotiable.dateRange,
+          timeRange: reservation.negotiable.timeRange,
+          businessProposedSchedule:
+            reservation.negotiable.businessProposedSchedule,
+          acceptedBusinessProposed: AcceptStatus.NotAccepted,
+        },
+      };
+      return Reservation.update(id, updateObj);
+    }
   }
 }
