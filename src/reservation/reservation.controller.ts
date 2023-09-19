@@ -15,6 +15,7 @@ import { RatingDto } from './entities/rating.dto';
 import { AcceptStatus } from './entities/reservation.entity';
 import { ScheduleProposedDto } from './entities/schedule-proposed.dto';
 import { UserResponseProposedScheduleDto } from './entities/user-response-proposed-schedule.dto';
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 
 @Controller('reservation')
 export class ReservationController {
@@ -24,10 +25,21 @@ export class ReservationController {
   async getReservations(
     @Query('businessId') businessId?: string,
     @Query('userId') userId?: string,
+    @Query('limit') limit?: string,
+    @Query('lastKey') lastKey?: string,
   ) {
     if (businessId)
-      return this.reservationService.getReservationByBusinessId(businessId);
-    if (userId) return this.reservationService.getReservationsByUserId(userId);
+      return this.reservationService.getReservationByBusinessId(
+        businessId,
+        parseInt(limit),
+        lastKey,
+      );
+    if (userId)
+      return this.reservationService.getReservationsByUserId(
+        userId,
+        parseInt(limit),
+        lastKey,
+      );
   }
 
   @Post()

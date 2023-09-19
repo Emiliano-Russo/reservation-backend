@@ -3,19 +3,33 @@ import { BusinessType } from './entities/businessType.entity';
 import { BusinessTypeCreateDto } from './entities/businessType-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { BusinessTypeUpdateDto } from './entities/businessType-update.dto';
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
+import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 
 @Injectable()
 export class BusinessTypeService {
   constructor() {}
 
-  async getBusinessTypes() {
-    const businessTypes = await BusinessType.scan().exec();
-    return businessTypes;
+  async getBusinessTypes(
+    limit: number,
+    lastKey: string,
+  ): Promise<PaginatedResponse> {
+    let businessTypes = await BusinessType.scan().limit(limit);
+    console.log('limit: ', limit);
+
+    if (lastKey) {
+      businessTypes = businessTypes.startAt({ id: lastKey });
+    }
+
+    const result = await businessTypes.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
   }
 
   async getBusinessType(id: string) {
-    const businessType = await BusinessType.scan('id').eq(id).exec();
-    return businessType;
+    return BusinessType.get(id);
   }
 
   async createBusinessType(

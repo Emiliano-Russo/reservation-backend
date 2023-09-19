@@ -8,26 +8,51 @@ import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { NotFoundException } from '@nestjs/common';
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
-import { UserService } from 'src/user/user.service';
+import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class ReservationService {
-  constructor(private businessService: BusinessService) {}
+  constructor(private businessService: BusinessService) { }
 
-  async getReservationByBusinessId(businessId: string) {
-    const reservations = await Reservation.scan('businessId')
-      .eq(businessId)
-      .exec();
-    return reservations;
+  async getReservationByBusinessId(
+    businessId: string,
+    limit: number,
+    lastKey: string
+  ): Promise<PaginatedResponse> {
+    let reservations = await Reservation.scan('businessId').eq(businessId).limit(limit);
+
+    if (lastKey) {
+      reservations = reservations.startAt({ id: lastKey });
+    }
+
+    const result = await reservations.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
   }
 
-  async getReservationsByUserId(userId: string) {
-    const reservations = await Reservation.scan('userId').eq(userId).exec();
-    return reservations;
+  async getReservationsByUserId(
+    userId: string,
+    limit: number,
+    lastKey: string
+  ): Promise<PaginatedResponse> {
+    let reservations = await Reservation.scan('userId').eq(userId).limit(limit);
+
+    if (lastKey) {
+      reservations = reservations.startAt({ id: lastKey });
+    }
+
+    const result = await reservations.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
   }
 
   async createReservation(

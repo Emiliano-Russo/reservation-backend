@@ -20,10 +20,11 @@ import {
   FileInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
+import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) {}
+  constructor(private readonly businessService: BusinessService) { }
 
   @Post()
   @UseInterceptors(
@@ -75,16 +76,28 @@ export class BusinessController {
     @Query('ownerId') ownerId?: string,
     @Query('typeId') typeId?: string,
     @Query('activePremiumSubscriptionId') activePremiumSubscriptionId?: string,
+    @Query('limit') limit?: string,
+    @Query('lastKey') lastKey?: string,
   ) {
     if (businessId) {
       return this.businessService.getBusinessById(businessId);
     } else if (ownerId) {
-      return this.businessService.getBusinessByOwnerId(ownerId);
+      return this.businessService.getBusinessByOwnerId(
+        ownerId,
+        parseInt(limit),
+        lastKey,
+      );
     } else if (typeId) {
-      return this.businessService.getBusinessByTypeId(typeId);
+      return this.businessService.getBusinessByTypeId(
+        typeId,
+        parseInt(limit),
+        lastKey,
+      );
     } else if (activePremiumSubscriptionId) {
       return this.businessService.getBusinessByActivePremiumSubscriptionId(
         activePremiumSubscriptionId,
+        parseInt(limit),
+        lastKey,
       );
     } else {
       throw new BadRequestException('Invalid query parameters.');
