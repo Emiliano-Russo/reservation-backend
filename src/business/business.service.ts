@@ -28,10 +28,12 @@ export class BusinessService {
       throw new Error('name cannot be undefined');
     }
 
+    var nameInsensitive = name.toLocaleLowerCase();
+
     const params = {
-      FilterExpression: 'contains(#name, :name)',
-      ExpressionAttributeNames: { '#name': 'name' },
-      ExpressionAttributeValues: { ':name': name },
+      FilterExpression: 'contains(#nameInsensitive, :nameInsensitive)',
+      ExpressionAttributeNames: { '#nameInsensitive': 'nameInsensitive' },
+      ExpressionAttributeValues: { ':nameInsensitive': nameInsensitive },
     };
 
     let business = await Business.scan(params).limit(limit);

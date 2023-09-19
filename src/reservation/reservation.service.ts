@@ -30,10 +30,12 @@ export class ReservationService {
       throw new Error('businessName cannot be undefined');
     }
 
+    var businessNameInsensitive = businessName.toLocaleLowerCase();
+
     const params = {
-      FilterExpression: 'contains(#businessName, :businessName)',
-      ExpressionAttributeNames: { '#businessName': 'businessName' },
-      ExpressionAttributeValues: { ':businessName': businessName },
+      FilterExpression: 'contains(#businessNameInsensitive, :businessNameInsensitive)',
+      ExpressionAttributeNames: { '#businessNameInsensitive': 'businessNameInsensitive' },
+      ExpressionAttributeValues: { ':businessNameInsensitive': businessNameInsensitive },
     };
 
     let reservations = await Reservation.scan(params).limit(limit);

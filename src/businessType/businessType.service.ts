@@ -18,13 +18,32 @@ export class BusinessTypeService {
       throw new Error('name cannot be undefined');
     }
 
+    var nameInsensitive = name.toLocaleLowerCase();
+
     const params = {
-      FilterExpression: 'contains(#name, :name)',
-      ExpressionAttributeNames: { '#name': 'name' },
-      ExpressionAttributeValues: { ':name': name },
+      FilterExpression: 'contains(#nameInsensitive, :nameInsensitive)',
+      ExpressionAttributeNames: { '#nameInsensitive': 'nameInsensitive' },
+      ExpressionAttributeValues: { ':nameInsensitive': nameInsensitive },
     };
 
     let businessTypes = await BusinessType.scan(params).limit(limit);
+
+    if (lastKey) {
+      businessTypes = businessTypes.startAt({ id: lastKey });
+    }
+
+    const result = await businessTypes.exec();
+    return {
+      items: result,
+      lastKey: result.lastKey || null,
+    };
+  }
+
+  async getBusinessTypes(
+    limit: number,
+    lastKey: string,
+  ): Promise<PaginatedResponse> {
+    let businessTypes = await BusinessType.scan().limit(limit);
 
     if (lastKey) {
       businessTypes = businessTypes.startAt({ id: lastKey });

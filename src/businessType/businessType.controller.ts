@@ -31,11 +31,13 @@ export class BusinessTypeController {
     @Get()
     async getBusinessTypesOrType(
         @Query('businessTypeId') businessTypeId?: string,
+        @Query('limit') limit?: string,
+        @Query('lastKey') lastKey?: string,
     ) {
         if (businessTypeId) {
             return this.businessTypeService.getBusinessType(businessTypeId);
         }
-        return this.businessTypeService.getBusinessTypes();
+        return this.businessTypeService.getBusinessTypes(parseInt(limit), lastKey);
     }
 
     @Post()
