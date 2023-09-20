@@ -5,10 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { BusinessTypeUpdateDto } from './entities/businessType-update.dto';
 import { PaginationParametersDto } from "src/helpers/pagination-parameters.dto";
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
+import { S3Service } from 'src/shared/s3.service';
 
 @Injectable()
 export class BusinessTypeService {
-    constructor() { }
+    constructor(private readonly s3Service: S3Service) { }
 
     async getBusinessTypes(
         limit: number,
@@ -73,6 +74,8 @@ export class BusinessTypeService {
         if (!businessType) {
             throw new Error('businessType not found');
         }
+
+        await this.s3Service.deleteFile(businessType.icon);
 
         return businessType.delete();
     }

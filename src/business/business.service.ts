@@ -13,6 +13,7 @@ import { User } from 'src/user/entities/user.entity';
 import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class BusinessService {
@@ -194,6 +195,12 @@ export class BusinessService {
     if (!business) {
       throw new Error('business not found');
     }
+
+    await this.s3Service.deleteFile(business.logoURL);
+
+    await Promise.all(business.multimediaURL.map(async (m) => {
+      await this.s3Service.deleteFile(m);
+    }))
 
     return business.delete();
   }

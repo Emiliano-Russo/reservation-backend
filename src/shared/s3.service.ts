@@ -3,6 +3,7 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 
@@ -13,6 +14,14 @@ export class S3Service {
 
   constructor() {
     this.s3 = new S3Client({ region: 'us-east-1' }); // Cambia a tu región
+  }
+
+  async deleteFile(imageName) {
+    const params = {
+      Bucket: this.bucket_name,
+      Key: imageName
+    }
+    return await this.s3.send(new DeleteObjectCommand(params));
   }
 
   async uploadFile(file, folder) {
