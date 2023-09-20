@@ -14,45 +14,107 @@ import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 import { User } from 'src/user/entities/user.entity';
+import { DynamoDB, QueryInput } from '@aws-sdk/client-dynamodb';
+import { normalizeDynamoDBData } from '../helpers/normalized.data';
+
+const dynamoDB = new DynamoDB();
+
+interface LastKeyByUserFormat {
+  id: string;
+  createdAt: string;
+  userId: string;
+}
+
+interface LastKeyByBusinessFormat {
+  businessId: string;
+  createdAt: number;
+  id: string;
+}
 
 @Injectable()
 export class ReservationService {
-  constructor(private businessService: BusinessService) { }
+  constructor(private businessService: BusinessService) {}
 
   async getReservationByBusinessId(
     businessId: string,
     limit: number,
-    lastKey: string
+    lastKey: LastKeyByBusinessFormat,
   ): Promise<PaginatedResponse> {
-    let reservations = await Reservation.scan('businessId').eq(businessId).limit(limit);
+    console.log('getReservationByBusinessId');
+    const params: QueryInput = {
+      TableName: 'Reservation', // Asegúrate de que este sea el nombre correcto de tu tabla
+      IndexName: 'index-businessId-createdAt',
+      KeyConditionExpression: 'businessId = :businessId',
+      ExpressionAttributeValues: {
+        ':businessId': { S: businessId },
+      },
+      Limit: limit,
+      ScanIndexForward: false, // Esto asegura que los resultados estén en orden descendente basados en la clave de ordenación
+    };
 
     if (lastKey) {
-      reservations = reservations.startAt({ id: lastKey });
+      params.ExclusiveStartKey = {
+        businessId: { S: lastKey.businessId },
+        createdAt: { N: String(lastKey.createdAt) },
+        id: { S: lastKey.id },
+      };
     }
 
-    const result = await reservations.exec();
-    return {
-      items: result,
-      lastKey: result.lastKey || null,
-    };
+    try {
+      const result = await dynamoDB.query(params);
+      console.log('the result: ', result);
+      const normalizedItems = result.Items.map((item) =>
+        normalizeDynamoDBData(item),
+      );
+      console.log('last evaluated key: ', result.LastEvaluatedKey);
+      return {
+        items: normalizedItems,
+        lastKey: normalizeDynamoDBData(result.LastEvaluatedKey) || null,
+      };
+    } catch (error) {
+      console.error('Error al consultar DynamoDB:', error);
+      throw error;
+    }
   }
 
   async getReservationsByUserId(
     userId: string,
     limit: number,
-    lastKey: string
+    lastKey: LastKeyByUserFormat,
   ): Promise<PaginatedResponse> {
-    let reservations = await Reservation.scan('userId').eq(userId).limit(limit);
+    console.log('EL LAST KEY: ', lastKey);
+    const params: QueryInput = {
+      TableName: 'Reservation', // Reemplaza con el nombre real de tu tabla
+      IndexName: 'index-userId-createdAt',
+      KeyConditionExpression: 'userId = :userId',
+      ExpressionAttributeValues: {
+        ':userId': { S: userId },
+      },
+      Limit: limit,
+      ScanIndexForward: false, // Esto asegura que los resultados estén en orden descendente basados en la clave de ordenación
+    };
 
     if (lastKey) {
-      reservations = reservations.startAt({ id: lastKey });
+      params.ExclusiveStartKey = {
+        userId: { S: lastKey.userId },
+        createdAt: { N: String(lastKey.createdAt) },
+        id: { S: lastKey.id },
+      };
+      console.log('setted: ', params.ExclusiveStartKey);
     }
-
-    const result = await reservations.exec();
-    return {
-      items: result,
-      lastKey: result.lastKey || null,
-    };
+    try {
+      const result = await dynamoDB.query(params);
+      const normalizedItems = result.Items.map((item) =>
+        normalizeDynamoDBData(item),
+      );
+      return {
+        items: normalizedItems,
+        lastKey: normalizeDynamoDBData(result.LastEvaluatedKey) || null,
+      };
+    } catch (error) {
+      console.error('Error al consultar DynamoDB:', error);
+      throw error;
+    }
   }
 
   async createReservation(
