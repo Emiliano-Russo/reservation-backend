@@ -82,7 +82,11 @@ export class ReservationController {
     @Param('createdAt') createdAt: number,
     @Body() dto: UserResponseProposedScheduleDto,
   ) {
-    return this.reservationService.userResponseProposedSchedule(id, dto.value);
+    return this.reservationService.userResponseProposedSchedule(
+      id,
+      createdAt,
+      dto.value,
+    );
   }
 
   @Patch(':id/:createdAt')

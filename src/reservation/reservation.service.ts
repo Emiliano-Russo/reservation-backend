@@ -15,6 +15,7 @@ import { Business } from 'src/business/entities/business.entity';
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 import { User } from 'src/user/entities/user.entity';
 import {
+  AttributeValue,
   DynamoDB,
   QueryInput,
   UpdateItemInput,
@@ -284,14 +285,18 @@ export class ReservationService {
     }
   }
 
-  async userResponseProposedSchedule(id: string, value: AcceptStatus) {
-    const reservation = await Reservation.get(id);
+  async userResponseProposedSchedule(
+    id: string,
+    createdAt: number,
+    value: AcceptStatus,
+  ) {
+    const reservation = await this.getReservation(id, createdAt);
 
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
     }
 
-    if (reservation.status != ReservationStatus.Pending) {
+    if (reservation.status !== ReservationStatus.Pending) {
       throw new BadRequestException(
         'This reservation is not longer on Pending State',
       );
@@ -304,29 +309,71 @@ export class ReservationService {
       throw new BadRequestException('Invalid Data');
     }
 
+    let UpdateExpression = '';
+    const ExpressionAttributeValues: Record<string, AttributeValue> = {};
+
     if (value === AcceptStatus.Accepted) {
-      const date = reservation.negotiable.businessProposedSchedule;
-      const updateObj = {
-        negotiable: undefined,
-        reservationDate: new Date(date.toString()),
-        status: ReservationStatus.Confirmed,
+      UpdateExpression =
+        'REMOVE negotiable SET reservationDate = :reservationDateValue, #status = :confirmedStatus';
+      ExpressionAttributeValues[':reservationDateValue'] = {
+        S: reservation.negotiable.businessProposedSchedule,
       };
-
-      return Reservation.update(id, updateObj);
-    }
-
-    if (value === AcceptStatus.NotAccepted) {
-      const date = reservation.negotiable.businessProposedSchedule;
-      const updateObj = {
-        negotiable: {
-          dateRange: reservation.negotiable.dateRange,
-          timeRange: reservation.negotiable.timeRange,
-          businessProposedSchedule:
-            reservation.negotiable.businessProposedSchedule,
-          acceptedBusinessProposed: AcceptStatus.NotAccepted,
+      ExpressionAttributeValues[':confirmedStatus'] = {
+        S: ReservationStatus.Confirmed,
+      };
+    } else if (value === AcceptStatus.NotAccepted) {
+      UpdateExpression =
+        'SET negotiable.dateRange = :dateRangeValue, negotiable.timeRange = :timeRangeValue, negotiable.businessProposedSchedule = :businessProposedScheduleValue, negotiable.acceptedBusinessProposed = :notAcceptedStatus';
+      ExpressionAttributeValues[':dateRangeValue'] = {
+        M: {
+          start: { S: reservation.negotiable.dateRange.start },
+          end: { S: reservation.negotiable.dateRange.end },
         },
       };
-      return Reservation.update(id, updateObj);
+      ExpressionAttributeValues[':timeRangeValue'] = {
+        M: {
+          start: { S: reservation.negotiable.timeRange.start },
+          end: { S: reservation.negotiable.timeRange.end },
+        },
+      };
+      ExpressionAttributeValues[':businessProposedScheduleValue'] = {
+        S: reservation.negotiable.businessProposedSchedule,
+      };
+      ExpressionAttributeValues[':notAcceptedStatus'] = {
+        S: AcceptStatus.NotAccepted,
+      };
+    }
+
+    if (!UpdateExpression) {
+      throw new Error('UpdateExpression is empty. This should not happen.');
+    }
+
+    ExpressionAttributeValues[':pendingStatus'] = {
+      S: ReservationStatus.Pending,
+    };
+
+    const params: UpdateItemInput = {
+      TableName: 'Reservation',
+      Key: {
+        id: { S: id },
+        createdAt: { N: createdAt.toString() },
+      },
+      UpdateExpression: UpdateExpression,
+      ExpressionAttributeValues: ExpressionAttributeValues,
+      ConditionExpression:
+        'attribute_exists(id) AND attribute_exists(createdAt) AND #status = :pendingStatus',
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ReturnValues: 'ALL_NEW',
+    };
+
+    try {
+      const response = await dynamoDB.updateItem(params);
+      return normalizeDynamoDBData(response.Attributes);
+    } catch (error) {
+      console.error('Error al actualizar en DynamoDB:', error);
+      throw error;
     }
   }
 }
