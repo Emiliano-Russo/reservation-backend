@@ -14,7 +14,11 @@ import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 import { User } from 'src/user/entities/user.entity';
-import { DynamoDB, QueryInput } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDB,
+  QueryInput,
+  UpdateItemInput,
+} from '@aws-sdk/client-dynamodb';
 import { normalizeDynamoDBData } from '../helpers/normalized.data';
 
 const dynamoDB = new DynamoDB();
@@ -35,12 +39,37 @@ interface LastKeyByBusinessFormat {
 export class ReservationService {
   constructor(private businessService: BusinessService) {}
 
+  async getReservation(id: string, createdAt: number) {
+    const params: QueryInput = {
+      TableName: 'Reservation',
+      KeyConditionExpression: '#id = :idValue AND #createdAt = :createdAtValue',
+      ExpressionAttributeNames: {
+        '#id': 'id',
+        '#createdAt': 'createdAt',
+      },
+      ExpressionAttributeValues: {
+        ':idValue': { S: id },
+        ':createdAtValue': { N: createdAt.toString() },
+      },
+    };
+
+    try {
+      const response = await dynamoDB.query(params);
+      if (response.Items && response.Items.length > 0) {
+        return normalizeDynamoDBData(response.Items[0]); // normaliza el primer elemento
+      }
+      return null; // no se encontró la reserva
+    } catch (error) {
+      console.error('Error al consultar DynamoDB:', error);
+      throw error;
+    }
+  }
+
   async getReservationByBusinessId(
     businessId: string,
     limit: number,
     lastKey: LastKeyByBusinessFormat,
   ): Promise<PaginatedResponse> {
-    console.log('getReservationByBusinessId');
     const params: QueryInput = {
       TableName: 'Reservation', // Asegúrate de que este sea el nombre correcto de tu tabla
       IndexName: 'index-businessId-createdAt',
@@ -62,11 +91,9 @@ export class ReservationService {
 
     try {
       const result = await dynamoDB.query(params);
-      console.log('the result: ', result);
       const normalizedItems = result.Items.map((item) =>
         normalizeDynamoDBData(item),
       );
-      console.log('last evaluated key: ', result.LastEvaluatedKey);
       return {
         items: normalizedItems,
         lastKey: normalizeDynamoDBData(result.LastEvaluatedKey) || null,
@@ -82,7 +109,6 @@ export class ReservationService {
     limit: number,
     lastKey: LastKeyByUserFormat,
   ): Promise<PaginatedResponse> {
-    console.log('EL LAST KEY: ', lastKey);
     const params: QueryInput = {
       TableName: 'Reservation', // Reemplaza con el nombre real de tu tabla
       IndexName: 'index-userId-createdAt',
@@ -100,7 +126,6 @@ export class ReservationService {
         createdAt: { N: String(lastKey.createdAt) },
         id: { S: lastKey.id },
       };
-      console.log('setted: ', params.ExclusiveStartKey);
     }
     try {
       const result = await dynamoDB.query(params);
@@ -145,38 +170,43 @@ export class ReservationService {
       createdAt: new Date(),
     });
 
-    console.log('Reservation data:', reservation);
-
-    console.log('saving...');
     return await reservation.save();
   }
 
   async updateReservation(
     id: string,
+    createdAt: number,
     updateDto: ReservationUpdateDto,
   ): Promise<any> {
-    const reservation = await Reservation.get(id);
+    const params: UpdateItemInput = {
+      TableName: 'Reservation', // Cambia esto por el nombre real de tu tabla
+      Key: {
+        id: { S: id },
+        createdAt: { N: createdAt.toString() },
+      },
+      UpdateExpression: 'SET #status = :statusValue', // Esto es un ejemplo, ajusta según tus necesidades
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':statusValue': { S: updateDto.status },
+      },
+      ConditionExpression:
+        'attribute_exists(id) AND attribute_exists(createdAt)',
+      ReturnValues: 'ALL_NEW', // Esto retornará el elemento actualizado
+    };
 
-    if (!reservation) {
-      throw new Error('Reservation not found');
+    try {
+      const response = await dynamoDB.updateItem(params);
+      return normalizeDynamoDBData(response.Attributes); // Esto retornará los atributos del elemento actualizado
+    } catch (error) {
+      console.error('Error al actualizar en DynamoDB:', error);
+      throw error;
     }
-
-    const updateData: any = {};
-
-    if (updateDto.date) {
-      updateData.reservationDate = new Date(updateDto.date);
-    }
-
-    if (updateDto.status) {
-      updateData.status = updateDto.status;
-    }
-
-    return Reservation.update(id, updateData);
   }
 
   async rateReservation(id: string, ratingDto: RatingDto): Promise<any> {
     const reservation = await Reservation.get(id);
-    console.log('reservation: ', reservation);
     const business = await Business.get({ id: reservation.businessId });
     business.totalRatingsCount += 1;
     business.totalRatingSum += ratingDto.rating;
@@ -208,7 +238,6 @@ export class ReservationService {
 
   async businessProposedSchedule(id: string, date: string) {
     const reservation = await Reservation.get(id);
-    console.log('#1');
 
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
@@ -220,8 +249,6 @@ export class ReservationService {
       );
     }
 
-    console.log('#2');
-
     const businessDto = {
       negotiable: {
         dateRange: reservation.negotiable.dateRange,
@@ -230,8 +257,6 @@ export class ReservationService {
         acceptedBusinessProposed: AcceptStatus.Unanswered,
       },
     };
-
-    console.log('#3', businessDto);
 
     return Reservation.update(id, businessDto);
   }

@@ -79,12 +79,18 @@ export class ReservationController {
     return this.reservationService.userResponseProposedSchedule(id, dto.value);
   }
 
-  @Patch(':id')
+  @Patch(':id/:createdAt')
   async updateReservation(
     @Param('id') id: string,
+    @Param('createdAt') createdAt: number,
     @Body() updateReservationDto: ReservationUpdateDto,
   ) {
-    return this.reservationService.updateReservation(id, updateReservationDto);
+    console.log('updating reservation ', id, createdAt, updateReservationDto);
+    return this.reservationService.updateReservation(
+      id,
+      createdAt,
+      updateReservationDto,
+    );
   }
 
   @Patch('rate/:id')
