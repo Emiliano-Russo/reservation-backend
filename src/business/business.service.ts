@@ -1,81 +1,85 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  Business,
-  BusinessStatus,
-  IAvailability,
-  IBusiness,
-  WeekDays,
-} from './entities/business.entity';
+import { Business, BusinessStatus, WeekDays } from './entities/business.entity';
 import { BusinessCreateDto } from './entities/business-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { BusinessUpdateDto } from './entities/business-update.dto';
 import { User } from 'src/user/entities/user.entity';
 import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
-import { PaginatedResponse } from 'src/interfaces/pagination.dto';
+import {
+  PaginatedResponse,
+  PaginationDto,
+} from 'src/interfaces/pagination.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly s3Service: S3Service) {}
+  constructor(
+    private readonly s3Service: S3Service,
+    @InjectRepository(Business)
+    private readonly businessRepository: Repository<Business>,
+  ) {}
 
   async getBusinessByOwnerId(
     ownerId: string,
-    limit: number,
-    lastKey: string,
+    paginationDto: PaginationDto,
   ): Promise<PaginatedResponse> {
-    let business = await Business.scan('ownerId').eq(ownerId).limit(limit);
+    const { limit, page } = paginationDto;
 
-    if (lastKey) {
-      business = business.startAt({ id: lastKey });
-    }
+    const [items, total] = await this.businessRepository.findAndCount({
+      where: { ownerId: ownerId },
+      take: limit,
+      skip: (page - 1) * limit,
+      order: {
+        id: 'ASC',
+      },
+    });
 
-    const result = await business.exec();
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      items: result,
-      lastKey: result.lastKey || null,
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
     };
   }
 
   async getBusinessByTypeId(
     typeId: string,
-    limit: number,
-    lastKey: string,
+    paginationDto: PaginationDto,
   ): Promise<PaginatedResponse> {
-    let business = await Business.scan('typeId').eq(typeId).limit(limit);
+    const { limit, page } = paginationDto;
 
-    if (lastKey) {
-      business = business.startAt({ id: lastKey });
-    }
+    const [items, total] = await this.businessRepository.findAndCount({
+      where: { typeId: typeId },
+      take: limit,
+      skip: (page - 1) * limit,
+      order: {
+        id: 'ASC',
+      },
+    });
 
-    const result = await business.exec();
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      items: result,
-      lastKey: result.lastKey || null,
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
     };
   }
 
-  async getBusinessByActivePremiumSubscriptionId(
-    activePremiumSubscriptionID: string,
-    limit: number,
-    lastKey: string,
-  ): Promise<PaginatedResponse> {
-    let business = await Business.scan('activePremiumSubscriptionID')
-      .eq(activePremiumSubscriptionID)
-      .limit(limit);
+  async getBusinessById(id: string): Promise<Business> {
+    const business = await this.businessRepository.findOne({ where: { id } });
 
-    if (lastKey) {
-      business = business.startAt({ id: lastKey });
+    if (!business) {
+      throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
-    const result = await business.exec();
-    return {
-      items: result,
-      lastKey: result.lastKey || null,
-    };
-  }
-
-  async getBusinessById(id: string) {
-    const business = await Business.get(id);
     return business;
   }
 
@@ -84,15 +88,13 @@ export class BusinessService {
     updateData: BusinessUpdateDto,
     logo?: any,
     banner?: any,
-  ): Promise<IBusiness> {
-    const business = await Business.get(id);
-    console.log('el business:', business);
+  ): Promise<Business> {
+    const business = await this.businessRepository.findOne({ where: { id } });
     if (!business) {
       throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
     if (logo) {
-      console.log('updating logo: ', logo);
       const sanitizedFilename = logo[0].originalname.replace(/\s+/g, '');
       logo[0].originalname = sanitizedFilename;
       await this.s3Service.uploadFile(
@@ -103,7 +105,6 @@ export class BusinessService {
     }
 
     if (banner) {
-      console.log('updating banner', banner);
       const sanitizedBannerFilename = banner[0].originalname.replace(
         /\s+/g,
         '',
@@ -113,18 +114,12 @@ export class BusinessService {
         banner[0],
         `business/${business.ownerId}/banner/`,
       );
-      business.multimediaURL = [
-        `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${business.ownerId}/banner/${sanitizedBannerFilename}`,
-      ];
+      business.banner = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${business.ownerId}/banner/${sanitizedBannerFilename}`;
     }
 
-    for (const key in updateData) {
-      if (Object.prototype.hasOwnProperty.call(updateData, key)) {
-        business[key] = updateData[key];
-      }
-    }
+    Object.assign(business, updateData);
 
-    await business.save();
+    await this.businessRepository.save(business);
     return business;
   }
 
@@ -133,14 +128,6 @@ export class BusinessService {
     logo: any,
     banner: any,
   ): Promise<any> {
-    const owner = await User.get(businessCreateDto.ownerId);
-    if (owner == undefined)
-      throw new NotFoundException('Owner does not exists');
-
-    const businessType = BusinessType.get(businessCreateDto.typeId);
-    if (businessType == undefined)
-      throw new NotFoundException('Business Type does not exists');
-
     let logoUrl =
       'https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=2000'; // URL por defecto
     let bannerUrl =
@@ -166,37 +153,26 @@ export class BusinessService {
       bannerUrl = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${businessCreateDto.ownerId}/banner/${sanitizedBannerFilename}`;
     }
 
-    const business = new Business({
-      id: uuidv4(),
-      ownerId: businessCreateDto.ownerId,
-      typeId: businessCreateDto.typeId,
-      name: businessCreateDto.name,
-      country: businessCreateDto.country,
-      department: businessCreateDto.department,
-      address: businessCreateDto.address,
-      coordinates: businessCreateDto.coordinates,
+    const business = this.businessRepository.create({
+      ...businessCreateDto,
       logoURL: logoUrl,
-      multimediaURL: [bannerUrl], // Si tienes varias URL de multimedia, combínalas aquí.
-      description: businessCreateDto.description,
-      assistantsID: [],
-      pendingInvitationsID: [],
+      banner: bannerUrl, // Asegúrate de que el campo en la entidad se llama 'banner' y no 'multimediaURL'
       status: BusinessStatus.Pending,
       totalRatingSum: 0,
       totalRatingsCount: 0,
       averageRating: 0,
-      availability: businessCreateDto.availability,
     });
 
-    return await business.save();
+    return await this.businessRepository.save(business);
   }
 
   async removeBusiness(id: string) {
-    const business = await Business.get(id);
+    const business = await this.businessRepository.findOne({ where: { id } });
 
     if (!business) {
       throw new Error('business not found');
     }
 
-    return business.delete();
+    await this.businessRepository.remove(business);
   }
 }

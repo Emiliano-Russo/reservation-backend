@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { BusinessStatus, IAvailability } from './business.entity';
+import { Availability, BusinessStatus } from './business.entity';
 
 export class BusinessCreateDto {
   @IsString()
@@ -55,5 +55,5 @@ export class BusinessCreateDto {
 
   @IsNotEmpty()
   @IsArray()
-  availability: IAvailability[];
+  availability: Availability[];
 }

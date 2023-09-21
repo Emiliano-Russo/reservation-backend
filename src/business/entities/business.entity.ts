@@ -1,5 +1,11 @@
-import * as dynamoose from 'dynamoose';
-import { AnyItem } from 'dynamoose/dist/Item';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 
 export enum BusinessStatus {
   Pending = 'Pending',
@@ -17,76 +23,96 @@ export enum WeekDays {
   Saturday = 'Saturday',
 }
 
-const MapSchema = new dynamoose.Schema({
-  pointX: String,
-  pointY: String,
-});
+@Entity('map')
+export class Map {
+  @Column()
+  pointX: string;
 
-const ShiftSchema = new dynamoose.Schema({
-  openingTime: { type: String, required: true },
-  closingTime: { type: String, required: true },
-});
-
-const AvailabilitySchema = new dynamoose.Schema({
-  day: { type: String, enum: Object.values(WeekDays), required: true },
-  shifts: { type: Array, schema: [{ type: Object, schema: ShiftSchema }] },
-  open: { type: Boolean, required: true },
-});
-
-const BusinessSchema = new dynamoose.Schema({
-  id: { type: String, hashKey: true },
-  ownerId: { type: String, required: true },
-  typeId: { type: String, required: true },
-  name: { type: String, required: true },
-  country: { type: String, required: true },
-  department: { type: String, required: true },
-  address: { type: String, required: true },
-  coordinates: { type: Object, schema: MapSchema, required: true },
-  activePremiumSubscriptionID: { type: String },
-  logoURL: { type: String },
-  multimediaURL: { type: Array, schema: [String] },
-  description: { type: String },
-  assistantsID: { type: Array, schema: [String] },
-  pendingInvitationsID: { type: Array, schema: [String] },
-  status: { type: String, enum: Object.values(BusinessStatus), required: true },
-  totalRatingSum: { type: Number, required: false, default: 0 }, // La suma total de todas las calificaciones.
-  totalRatingsCount: { type: Number, required: false, default: 0 }, // La cantidad total de calificaciones que ha recibido.
-  averageRating: { type: Number, required: false, default: 0 }, // El promedio de las calificaciones.
-  availability: {
-    type: Array,
-    schema: [{ type: Object, schema: AvailabilitySchema }],
-    required: true,
-  },
-});
-
-export interface IBusiness extends AnyItem {
-  id: String;
-  ownerId: String;
-  typeId: String;
-  name: String;
-  country: String;
-  department: String;
-  address: String;
-  coordinates: Object;
-  activePremiumSubscriptionID: String;
-  logoURL: String;
-  multimediaURL: Array<String>;
-  description: String;
-  assistantsID: Array<String>;
-  pendingInvitationsID: Array<String>;
-  status: BusinessStatus;
-  availability: Array<IAvailability>;
+  @Column()
+  pointY: string;
 }
 
-export interface IAvailability extends AnyItem {
+@Entity('shift')
+export class Shift {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  openingTime: string;
+
+  @Column()
+  closingTime: string;
+}
+
+@Entity('availability')
+export class Availability {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({
+    type: 'enum',
+    enum: WeekDays,
+  })
   day: WeekDays;
-  shifts: Array<IShift>;
-  open: Boolean;
+
+  @OneToMany(() => Shift, (shift) => shift.id)
+  shifts: Shift[];
+
+  @Column()
+  open: boolean;
 }
 
-export interface IShift extends AnyItem {
-  openingTime: String;
-  closingTime: String;
-}
+@Entity('business')
+export class Business {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-export const Business = dynamoose.model<IBusiness>('Business', BusinessSchema);
+  @Column()
+  ownerId: string;
+
+  @Column()
+  typeId: string;
+
+  @Column()
+  name: string;
+
+  @Column()
+  country: string;
+
+  @Column()
+  department: string;
+
+  @Column()
+  address: string;
+
+  @ManyToOne(() => Map)
+  @JoinColumn()
+  coordinates: Map;
+
+  @Column({ nullable: true })
+  logoURL: string;
+
+  @Column()
+  banner: string;
+
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({
+    type: 'enum',
+    enum: BusinessStatus,
+  })
+  status: BusinessStatus;
+
+  @Column({ default: 0 })
+  totalRatingSum: number;
+
+  @Column({ default: 0 })
+  totalRatingsCount: number;
+
+  @Column({ default: 0 })
+  averageRating: number;
+
+  @OneToMany(() => Availability, (availability) => availability.id)
+  availability: Availability[];
+}
