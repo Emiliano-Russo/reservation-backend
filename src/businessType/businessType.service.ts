@@ -1,79 +1,94 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BusinessType } from './entities/businessType.entity';
 import { BusinessTypeCreateDto } from './entities/businessType-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { BusinessTypeUpdateDto } from './entities/businessType-update.dto';
-import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
-import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
+import {
+  PaginatedResponse,
+  PaginationDto,
+} from 'src/interfaces/pagination.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class BusinessTypeService {
-  constructor() {}
+  constructor(
+    @InjectRepository(BusinessType)
+    private readonly businessTypeRepository: Repository<BusinessType>,
+  ) {}
 
   async getBusinessTypes(
-    limit: number,
-    lastKey: string,
+    paginationDto: PaginationDto,
   ): Promise<PaginatedResponse> {
-    let businessTypes = await BusinessType.scan().limit(limit);
-    console.log('limit: ', limit);
+    const { limit, page } = paginationDto;
 
-    if (lastKey) {
-      businessTypes = businessTypes.startAt({ id: lastKey });
-    }
+    const [items, total] = await this.businessTypeRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      order: {
+        id: 'ASC',
+      },
+    });
 
-    const result = await businessTypes.exec();
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      items: result,
-      lastKey: result.lastKey || null,
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
     };
   }
 
-  async getBusinessType(id: string) {
-    return BusinessType.get(id);
+  async getBusinessType(id: string): Promise<BusinessType> {
+    const businessType = await this.businessTypeRepository.findOne({
+      where: { id },
+    });
+    if (!businessType) {
+      throw new NotFoundException(`BusinessType with ID ${id} not found`);
+    }
+    return businessType;
   }
 
   async createBusinessType(
     createBusinessTypeDto: BusinessTypeCreateDto,
-  ): Promise<any> {
-    const businessType = new BusinessType({
+  ): Promise<BusinessType> {
+    const businessType = this.businessTypeRepository.create({
+      ...createBusinessTypeDto,
       id: uuidv4(),
-      name: createBusinessTypeDto.name,
-      description: createBusinessTypeDto.description,
-      icon: createBusinessTypeDto.icon,
-      controls: createBusinessTypeDto.controls,
     });
 
-    return await businessType.save();
+    return await this.businessTypeRepository.save(businessType);
   }
 
   async updateBusinessType(
     id: string,
     updateDto: BusinessTypeUpdateDto,
-  ): Promise<any> {
-    const businessType = await BusinessType.get(id);
-    console.log('obtuvimos el businessType: ', businessType);
+  ): Promise<BusinessType> {
+    const businessType = await this.businessTypeRepository.findOne({
+      where: { id },
+    });
 
     if (!businessType) {
       throw new Error('BusinessType not found');
     }
 
-    const updateData: any = {
-      ...businessType, // Spread para mantener los valores actuales
-      ...updateDto, // Spread para sobrescribir con los nuevos valores proporcionados
-    };
+    // Actualiza las propiedades de businessType con los valores de updateDto
+    Object.assign(businessType, updateDto);
 
-    delete updateData.id;
-
-    return BusinessType.update({ id }, updateData);
+    return await this.businessTypeRepository.save(businessType);
   }
 
-  async removeBusinessType(id: string) {
-    const businessType = await BusinessType.get(id);
+  async removeBusinessType(id: string): Promise<void> {
+    const businessType = await this.businessTypeRepository.findOne({
+      where: { id },
+    });
 
     if (!businessType) {
-      throw new Error('businessType not found');
+      throw new Error('BusinessType not found');
     }
 
-    return businessType.delete();
+    await this.businessTypeRepository.remove(businessType);
   }
 }

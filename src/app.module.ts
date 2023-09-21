@@ -7,6 +7,7 @@ import { BusinessModule } from './business/business.module';
 import { BusinessTypeModule } from './businessType/businessType.module';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -16,6 +17,16 @@ import { MailModule } from './mail/mail.module';
     BusinessTypeModule,
     AuthModule,
     MailModule,
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.AWS_SQL_HOST,
+      port: 3306,
+      username: process.env.AWS_SQL_USER,
+      password: process.env.AWS_SQL_PASSWORD,
+      database: process.env.AWS_SQL_DATABASE,
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      synchronize: true, // Esto sincronizará tu base de datos con tus entidades. Útil en desarrollo, pero ten cuidado en producción.
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

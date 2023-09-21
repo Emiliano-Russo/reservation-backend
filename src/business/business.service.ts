@@ -12,11 +12,11 @@ import { BusinessUpdateDto } from './entities/business-update.dto';
 import { User } from 'src/user/entities/user.entity';
 import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
-import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
+import { PaginatedResponse } from 'src/interfaces/pagination.dto';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly s3Service: S3Service) { }
+  constructor(private readonly s3Service: S3Service) {}
 
   async getBusinessByOwnerId(
     ownerId: string,
@@ -59,7 +59,9 @@ export class BusinessService {
     limit: number,
     lastKey: string,
   ): Promise<PaginatedResponse> {
-    let business = await Business.scan('activePremiumSubscriptionID').eq(activePremiumSubscriptionID).limit(limit);
+    let business = await Business.scan('activePremiumSubscriptionID')
+      .eq(activePremiumSubscriptionID)
+      .limit(limit);
 
     if (lastKey) {
       business = business.startAt({ id: lastKey });

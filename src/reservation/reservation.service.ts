@@ -12,7 +12,7 @@ import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
 import { Business } from 'src/business/entities/business.entity';
-import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
+import { PaginatedResponse } from 'src/interfaces/pagination.dto';
 import { User } from 'src/user/entities/user.entity';
 import {
   AttributeValue,
