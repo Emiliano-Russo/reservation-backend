@@ -33,7 +33,7 @@ interface LastKeyByBusinessFormat {
 
 @Injectable()
 export class ReservationService {
-  constructor(private businessService: BusinessService) {}
+  constructor(private businessService: BusinessService) { }
 
   async getReservationByBusinessId(
     businessId: string,
@@ -194,6 +194,16 @@ export class ReservationService {
     };
     await business.save();
     return Reservation.update(id, updateData);
+  }
+
+  async removeReservationByBusiness(id: string) {
+    const reservations = await Reservation.scan("businessId").eq(id).exec();
+
+    if (!reservations) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    await Promise.all(reservations.map(r => this.removeReservation(r.id)));
   }
 
   async removeReservation(id: string) {

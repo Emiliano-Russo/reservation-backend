@@ -60,7 +60,7 @@ const BusinessSchema = new dynamoose.Schema({
 });
 
 export interface IBusiness extends AnyItem {
-  id: String;
+  id: string;
   ownerId: String;
   typeId: String;
   name: String;

@@ -14,10 +14,14 @@ import { BusinessType } from 'src/businessType/entities/businessType.entity';
 import { S3Service } from 'src/shared/s3.service';
 import { PaginatedResponse } from 'src/interfaces/PaginatedResponse';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { ReservationService } from 'src/reservation/reservation.service';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly s3Service: S3Service) { }
+  constructor(
+    private readonly s3Service: S3Service,
+    private readonly reservation: ReservationService
+  ) { }
 
   async getBusinessByOwnerId(
     ownerId: string,
@@ -189,12 +193,24 @@ export class BusinessService {
     return await business.save();
   }
 
+  async removeBusinessByBusinessType(id: string) {
+    const business = await Business.scan("typeId").eq(id).exec();
+
+    if (!business) {
+      throw new Error('business not found');
+    }
+
+    await Promise.all(business.map(b => this.removeBusiness(b.id)));
+  }
+
   async removeBusiness(id: string) {
     const business = await Business.get(id);
 
     if (!business) {
       throw new Error('business not found');
     }
+
+    await this.reservation.removeReservationByBusiness(id);
 
     await this.s3Service.deleteFile(business.logoURL);
 
