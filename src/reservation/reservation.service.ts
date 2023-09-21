@@ -91,9 +91,11 @@ export class ReservationService {
 
     try {
       const result = await dynamoDB.query(params);
+      console.log('About to normalize....');
       const normalizedItems = result.Items.map((item) =>
         normalizeDynamoDBData(item),
       );
+      console.log('WE MADE IT!!');
       return {
         items: normalizedItems,
         lastKey: normalizeDynamoDBData(result.LastEvaluatedKey) || null,
@@ -236,29 +238,50 @@ export class ReservationService {
     return reservation.delete();
   }
 
-  async businessProposedSchedule(id: string, date: string) {
-    const reservation = await Reservation.get(id);
+  async businessProposedSchedule(id: string, createdAt: number, date: string) {
+    console.log('proposed schedule....');
+    const reservation = await this.getReservation(id, createdAt);
 
-    if (!reservation) {
-      throw new NotFoundException('Reservation not found');
-    }
-
-    if (reservation.status != ReservationStatus.Pending) {
-      throw new BadRequestException(
-        'This reservation is not longer on Pending State',
-      );
-    }
-
-    const businessDto = {
-      negotiable: {
-        dateRange: reservation.negotiable.dateRange,
-        timeRange: reservation.negotiable.timeRange,
-        businessProposedSchedule: date,
-        acceptedBusinessProposed: AcceptStatus.Unanswered,
+    const params: UpdateItemInput = {
+      TableName: 'Reservation',
+      Key: {
+        id: { S: id },
+        createdAt: { N: createdAt.toString() },
       },
+      UpdateExpression:
+        'SET negotiable.dateRange = :dateRangeValue, negotiable.timeRange = :timeRangeValue, negotiable.businessProposedSchedule = :businessProposedScheduleValue, negotiable.acceptedBusinessProposed = :acceptedBusinessProposedValue',
+      ExpressionAttributeValues: {
+        ':dateRangeValue': {
+          M: {
+            start: { S: reservation.negotiable.dateRange.start },
+            end: { S: reservation.negotiable.dateRange.end },
+          },
+        },
+        ':timeRangeValue': {
+          M: {
+            start: { S: reservation.negotiable.timeRange.start },
+            end: { S: reservation.negotiable.timeRange.end },
+          },
+        },
+        ':businessProposedScheduleValue': { S: date },
+        ':acceptedBusinessProposedValue': { S: AcceptStatus.Unanswered },
+        ':pendingStatus': { S: ReservationStatus.Pending },
+      },
+      ConditionExpression:
+        'attribute_exists(id) AND attribute_exists(createdAt) AND #status = :pendingStatus',
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ReturnValues: 'ALL_NEW',
     };
 
-    return Reservation.update(id, businessDto);
+    try {
+      const response = await dynamoDB.updateItem(params);
+      return normalizeDynamoDBData(response.Attributes); // Esto retornará los atributos del elemento actualizado
+    } catch (error) {
+      console.error('Error al actualizar en DynamoDB:', error);
+      throw error;
+    }
   }
 
   async userResponseProposedSchedule(id: string, value: AcceptStatus) {

@@ -7,10 +7,10 @@ export function normalizeDynamoDBData(data: any): any {
     } else if (data[key].N !== undefined) {
       normalizedData[key] = Number(data[key].N);
     } else if (data[key].M !== undefined) {
-      normalizedData[key] = this.normalizeDynamoDBData(data[key].M);
+      normalizedData[key] = normalizeDynamoDBData(data[key].M);
     } else if (data[key].L !== undefined) {
       normalizedData[key] = data[key].L.map((item: any) =>
-        this.normalizeDynamoDBData(item),
+        normalizeDynamoDBData(item),
       );
     } else {
       normalizedData[key] = data[key];

@@ -61,19 +61,25 @@ export class ReservationController {
     return this.reservationService.createReservation(createReservationDto);
   }
 
-  @Patch('scheduleProposed/:id')
+  @Patch('scheduleProposed/:id/:createdAt')
   async businessProposedSchedule(
     @Param('id') id: string,
+    @Param('createdAt') createdAt: number,
     @Body() dto: ScheduleProposedDto,
   ) {
     console.log('dto: ', dto);
     console.log('id: ', id);
-    return this.reservationService.businessProposedSchedule(id, dto.date);
+    return this.reservationService.businessProposedSchedule(
+      id,
+      createdAt,
+      dto.date,
+    );
   }
 
-  @Patch('responseSchedulePropose/:id')
+  @Patch('responseSchedulePropose/:id/:createdAt')
   async userResponseProposedSchedule(
     @Param('id') id: string,
+    @Param('createdAt') createdAt: number,
     @Body() dto: UserResponseProposedScheduleDto,
   ) {
     return this.reservationService.userResponseProposedSchedule(id, dto.value);
