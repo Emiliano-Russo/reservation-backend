@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -21,13 +22,26 @@ import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
+  // el last key string viene asi
+  //   lastKey={"id":"0da6fa7b-cc57-42a9-9c32-4758f5554723","createdAt":1695234660932,"userId":"4e335d83-2fda-49d7-9a34-58950ff09d3b"}
   @Get()
   async getReservations(
     @Query('businessId') businessId?: string,
     @Query('userId') userId?: string,
     @Query('limit') limit?: string,
-    @Query('lastKey') lastKey?: string,
+    @Query('lastKey') lastKeyStr?: string,
   ) {
+    let lastKey = null;
+
+    if (lastKeyStr) {
+      try {
+        lastKey = JSON.parse(lastKeyStr);
+      } catch (error) {
+        throw new BadRequestException('Invalid lastKey format');
+      }
+    }
+    console.log('CONTROLLER LAST KEY: ', lastKey);
+
     if (businessId)
       return this.reservationService.getReservationByBusinessId(
         businessId,
