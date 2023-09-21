@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { S3Service } from 'src/shared/s3.service';
 import { AuthService } from 'src/auth/auth.service';
 import { MailService } from 'src/mail/mail.service';
-import { ReservationService } from 'src/reservation/reservation.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -16,7 +15,6 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private s3Service: S3Service,
-    private reservation: ReservationService,
     private authService: AuthService,
     private mailService: MailService,
   ) {}

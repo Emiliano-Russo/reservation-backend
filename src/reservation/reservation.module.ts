@@ -5,7 +5,7 @@ import { BusinessModule } from 'src/business/business.module';
 import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [BusinessModule],
+  imports: [BusinessModule, UserModule],
   controllers: [ReservationController],
   providers: [ReservationService],
   exports: [ReservationService],

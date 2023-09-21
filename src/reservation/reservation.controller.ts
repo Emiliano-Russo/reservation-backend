@@ -14,46 +14,31 @@ import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { ReservationService } from './reservation.service';
 import { RatingDto } from './entities/rating.dto';
 import { AcceptStatus } from './entities/reservation.entity';
-import { ScheduleProposedDto } from './entities/schedule-proposed.dto';
-import { UserResponseProposedScheduleDto } from './entities/user-response-proposed-schedule.dto';
-import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
+import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Controller('reservation')
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
-  // el last key string viene asi
-  //   lastKey={"id":"0da6fa7b-cc57-42a9-9c32-4758f5554723","createdAt":1695234660932,"userId":"4e335d83-2fda-49d7-9a34-58950ff09d3b"}
   @Get()
   async getReservations(
+    @Query() paginationDto: PaginationDto,
     @Query('businessId') businessId?: string,
     @Query('userId') userId?: string,
-    @Query('limit') limit?: string,
-    @Query('lastKey') lastKeyStr?: string,
   ) {
-    let lastKey = null;
-
-    if (lastKeyStr) {
-      try {
-        lastKey = JSON.parse(lastKeyStr);
-      } catch (error) {
-        throw new BadRequestException('Invalid lastKey format');
-      }
-    }
-    console.log('CONTROLLER LAST KEY: ', lastKey);
-
-    if (businessId)
+    if (businessId) {
       return this.reservationService.getReservationByBusinessId(
         businessId,
-        parseInt(limit),
-        lastKey,
+        paginationDto,
       );
-    if (userId)
+    }
+    if (userId) {
       return this.reservationService.getReservationsByUserId(
         userId,
-        parseInt(limit),
-        lastKey,
+        paginationDto,
       );
+    }
+    throw new BadRequestException('Provide either businessId or userId');
   }
 
   @Post()
@@ -61,46 +46,28 @@ export class ReservationController {
     return this.reservationService.createReservation(createReservationDto);
   }
 
-  @Patch('scheduleProposed/:id/:createdAt')
+  @Patch('scheduleProposed/:id')
   async businessProposedSchedule(
     @Param('id') id: string,
-    @Param('createdAt') createdAt: number,
-    @Body() dto: ScheduleProposedDto,
+    @Body('date') date: string,
   ) {
-    console.log('dto: ', dto);
-    console.log('id: ', id);
-    return this.reservationService.businessProposedSchedule(
-      id,
-      createdAt,
-      dto.date,
-    );
+    return this.reservationService.businessProposedSchedule(id, date);
   }
 
-  @Patch('responseSchedulePropose/:id/:createdAt')
+  @Patch('responseSchedulePropose/:id')
   async userResponseProposedSchedule(
     @Param('id') id: string,
-    @Param('createdAt') createdAt: number,
-    @Body() dto: UserResponseProposedScheduleDto,
+    @Body('value') value: AcceptStatus,
   ) {
-    return this.reservationService.userResponseProposedSchedule(
-      id,
-      createdAt,
-      dto.value,
-    );
+    return this.reservationService.userResponseProposedSchedule(id, value);
   }
 
-  @Patch(':id/:createdAt')
+  @Patch(':id')
   async updateReservation(
     @Param('id') id: string,
-    @Param('createdAt') createdAt: number,
     @Body() updateReservationDto: ReservationUpdateDto,
   ) {
-    console.log('updating reservation ', id, createdAt, updateReservationDto);
-    return this.reservationService.updateReservation(
-      id,
-      createdAt,
-      updateReservationDto,
-    );
+    return this.reservationService.updateReservation(id, updateReservationDto);
   }
 
   @Patch('rate/:id')

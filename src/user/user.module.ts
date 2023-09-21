@@ -12,7 +12,6 @@ import { S3Service } from 'src/shared/s3.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-    forwardRef(() => ReservationModule),
     forwardRef(() => AuthModule),
     MailModule,
   ],

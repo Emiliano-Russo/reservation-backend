@@ -8,49 +8,23 @@ import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { NotFoundException } from '@nestjs/common';
-import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
-import { BusinessService } from 'src/business/business.service';
 import { RatingDto } from './entities/rating.dto';
-import { Business } from 'src/business/entities/business.entity';
 import {
   PaginatedResponse,
   PaginationDto,
 } from 'src/interfaces/pagination.dto';
-import { User } from 'src/user/entities/user.entity';
-import {
-  AttributeValue,
-  DynamoDB,
-  QueryInput,
-  UpdateItemInput,
-} from '@aws-sdk/client-dynamodb';
-import { normalizeDynamoDBData } from '../helpers/normalized.data';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
-const dynamoDB = new DynamoDB();
-
-interface LastKeyByUserFormat {
-  id: string;
-  createdAt: string;
-  userId: string;
-}
-
-interface LastKeyByBusinessFormat {
-  businessId: string;
-  createdAt: number;
-  id: string;
-}
+import { BusinessService } from 'src/business/business.service';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ReservationService {
   constructor(
-    private businessService: BusinessService,
     @InjectRepository(Reservation)
     private readonly reservationRepository: Repository<Reservation>,
-    @InjectRepository(Business)
-    private readonly businessRepository: Repository<Business>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly businessService: BusinessService,
+    private readonly userService: UserService,
   ) {}
 
   async getReservation(id: string): Promise<Reservation | null> {
@@ -118,17 +92,16 @@ export class ReservationService {
   async createReservation(
     createReservationDto: ReservationCreateDto,
   ): Promise<Reservation> {
-    const user = await this.userRepository.findOne({
-      where: { id: createReservationDto.userId },
-    });
-    const business = await this.businessRepository.findOne({
-      where: { id: createReservationDto.businessId },
-    });
+    const user = await this.userService.getUser(createReservationDto.userId);
+    const business = await this.businessService.getBusinessById(
+      createReservationDto.businessId,
+    );
 
     if (!user) throw new NotFoundException('User Not Found');
     if (!business) throw new NotFoundException('Business Not Found');
 
     const reservation = this.reservationRepository.create({
+      id: uuidv4(),
       user: user, // Asigna la instancia completa de User
       business: business, // Asigna la instancia completa de Business
       reservationDate: createReservationDto.date
@@ -144,17 +117,14 @@ export class ReservationService {
 
   async updateReservation(
     id: string,
-    createdAt: Date,
     updateDto: ReservationUpdateDto,
   ): Promise<Reservation> {
     const reservation = await this.reservationRepository.findOne({
-      where: { id, createdAt },
+      where: { id },
     });
 
     if (!reservation) {
-      throw new NotFoundException(
-        `Reservation with ID ${id} and createdAt ${createdAt} not found`,
-      );
+      throw new NotFoundException(`Reservation with ID ${id} not found`);
     }
 
     // Actualiza los campos de la reserva con los valores del DTO
@@ -196,7 +166,10 @@ export class ReservationService {
           reservation.business.totalRatingsCount
         ).toFixed(1),
       );
-      await this.businessRepository.save(reservation.business);
+      this.businessService.updateBusiness(
+        reservation.business.id,
+        reservation.business,
+      );
     }
 
     return await this.reservationRepository.save(reservation);

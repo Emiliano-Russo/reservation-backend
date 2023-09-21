@@ -20,11 +20,11 @@ import {
   FileInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
-import { PaginationParametersDto } from 'src/helpers/pagination-parameters.dto';
+import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) { }
+  constructor(private readonly businessService: BusinessService) {}
 
   @Post()
   @UseInterceptors(
@@ -37,32 +37,6 @@ export class BusinessController {
     @Body() createBusinessDto: BusinessCreateDto,
     @UploadedFiles() files: { logo?: any; banner?: any },
   ) {
-    // Convertir la cadena JSON 'coordinates' en un objeto.
-    if (typeof createBusinessDto.coordinates === 'string') {
-      try {
-        createBusinessDto.coordinates = JSON.parse(
-          createBusinessDto.coordinates,
-        );
-      } catch (error) {
-        throw new BadRequestException('Invalid coordinates format');
-      }
-    }
-
-    // Convertir la cadena JSON 'availability' en un array.
-    if (typeof createBusinessDto.availability === 'string') {
-      try {
-        createBusinessDto.availability = JSON.parse(
-          createBusinessDto.availability,
-        );
-      } catch (error) {
-        throw new BadRequestException('Invalid availability format');
-      }
-    }
-
-    console.log('DTO received: ', createBusinessDto);
-    console.log('Logo received: ', files.logo);
-    console.log('Banner received: ', files.banner);
-
     return this.businessService.createBusiness(
       createBusinessDto,
       files.logo ? files.logo[0] : undefined,
@@ -72,33 +46,17 @@ export class BusinessController {
 
   @Get()
   async getBusiness(
+    @Query() paginationDto: PaginationDto,
     @Query('businessId') businessId?: string,
     @Query('ownerId') ownerId?: string,
     @Query('typeId') typeId?: string,
-    @Query('activePremiumSubscriptionId') activePremiumSubscriptionId?: string,
-    @Query('limit') limit?: string,
-    @Query('lastKey') lastKey?: string,
   ) {
     if (businessId) {
       return this.businessService.getBusinessById(businessId);
     } else if (ownerId) {
-      return this.businessService.getBusinessByOwnerId(
-        ownerId,
-        parseInt(limit),
-        lastKey,
-      );
+      return this.businessService.getBusinessByOwnerId(ownerId, paginationDto);
     } else if (typeId) {
-      return this.businessService.getBusinessByTypeId(
-        typeId,
-        parseInt(limit),
-        lastKey,
-      );
-    } else if (activePremiumSubscriptionId) {
-      return this.businessService.getBusinessByActivePremiumSubscriptionId(
-        activePremiumSubscriptionId,
-        parseInt(limit),
-        lastKey,
-      );
+      return this.businessService.getBusinessByTypeId(typeId, paginationDto);
     } else {
       throw new BadRequestException('Invalid query parameters.');
     }
@@ -119,8 +77,8 @@ export class BusinessController {
     return this.businessService.updateBusiness(
       id,
       businessUpdateDto,
-      files.logo,
-      files.banner,
+      files.logo ? files.logo[0] : undefined,
+      files.banner ? files.banner[0] : undefined,
     );
   }
 
