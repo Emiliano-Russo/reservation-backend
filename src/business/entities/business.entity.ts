@@ -25,6 +25,9 @@ export enum WeekDays {
 
 @Entity('map')
 export class Map {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
   @Column()
   pointX: string;
 

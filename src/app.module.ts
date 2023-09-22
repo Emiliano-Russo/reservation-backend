@@ -19,11 +19,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     MailModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.AWS_SQL_HOST,
+      host: process.env.SQL_HOST,
       port: 3306,
-      username: process.env.AWS_SQL_USER,
-      password: process.env.AWS_SQL_PASSWORD,
-      database: process.env.AWS_SQL_DATABASE,
+      username: process.env.SQL_USER,
+      password: process.env.SQL_PASSWORD,
+      database: process.env.SQL_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Esto sincronizará tu base de datos con tus entidades. Útil en desarrollo, pero ten cuidado en producción.
     }),

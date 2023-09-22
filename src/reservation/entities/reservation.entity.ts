@@ -26,6 +26,9 @@ export enum AcceptStatus {
 
 @Entity('range')
 export class Range {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
   @Column()
   start: string;
 
