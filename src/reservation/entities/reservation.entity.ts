@@ -1,5 +1,15 @@
-import * as dynamoose from 'dynamoose';
-import { AnyItem } from 'dynamoose/dist/Item';
+import { Business } from 'src/business/entities/business.entity';
+import { User } from 'src/user/entities/user.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  OneToOne,
+} from 'typeorm';
+import { Negotiable } from './negotiable.entity';
 
 export enum ReservationStatus {
   Pending = 'Pending',
@@ -10,95 +20,42 @@ export enum ReservationStatus {
   NotAttended = 'NotAttended',
 }
 
-export enum AcceptStatus {
-  Unanswered = 'Unanswered',
-  Accepted = 'Accepted',
-  NotAccepted = 'NotAccepted',
-}
-
-const RangeSchema = new dynamoose.Schema({
-  start: { type: String, required: true },
-  end: { type: String, required: false },
-});
-
-const NegotiableSchema = new dynamoose.Schema({
-  dateRange: RangeSchema,
-  timeRange: RangeSchema,
-  businessProposedSchedule: { type: String, required: false },
-  acceptedBusinessProposed: {
-    type: String,
-    enum: Object.values(AcceptStatus),
-    required: false,
-  },
-});
-
-const ExtraSchema = new dynamoose.Schema({
-  label: { type: String, required: true },
-  value: { type: String, required: true },
-  labelFirst: { type: Boolean, default: true },
-});
-
-const ReservationSchema = new dynamoose.Schema({
-  id: { type: String, hashKey: true },
-  userId: { type: String, required: true },
-  businessId: { type: String, required: true },
-  businessName: { type: String, required: true },
-  userName: { type: String, required: true },
-  reservationDate: { type: Date, required: false },
-  rating: { type: Number, required: false, default: null },
-  comment: { type: String, required: false, default: null },
-  status: {
-    type: String,
-    enum: Object.values(ReservationStatus),
-    required: true,
-  },
-  extras: {
-    type: Array,
-    schema: [ExtraSchema], // Esquema para los extras
-    required: false,
-  },
-  negotiable: {
-    type: Object,
-    schema: NegotiableSchema,
-    required: false,
-  },
-  createdAt: { type: Date, default: Date.now },
-});
-
-interface Range {
-  start: any;
-  end?: any;
-}
-
-export interface Negotiable {
-  dateRange?: Range;
-  timeRange?: Range;
-  businessProposedSchedule?: String;
-  acceptedBusinessProposed?: AcceptStatus;
-}
-
-export interface IExtra {
-  label: string;
-  value: string;
-  labelFirst: boolean;
-}
-
-export interface IReservation extends AnyItem {
+@Entity('reservation')
+export class Reservation {
+  @PrimaryGeneratedColumn('uuid')
   id: string;
-  userId: string;
-  businessId: string;
-  businessName: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  reservationDate?: Date;
-  status: ReservationStatus;
-  extras?: IExtra[];
-  negotiable?: Negotiable;
-  createdAt?: Date;
-}
 
-export const Reservation = dynamoose.model<IReservation>(
-  'Reservation',
-  ReservationSchema,
-);
+  @ManyToOne(() => User, (user) => user.reservations)
+  @JoinColumn()
+  user: User;
+
+  @ManyToOne(() => Business, (business) => business.reservations)
+  @JoinColumn()
+  business: Business;
+
+  @Column({ type: 'date', nullable: true })
+  reservationDate: Date | null;
+
+  @Column({ nullable: true })
+  rating: number;
+
+  @Column({ nullable: true })
+  comment: string;
+
+  @Column({
+    type: 'enum',
+    enum: ReservationStatus,
+  })
+  status: ReservationStatus;
+
+  @OneToOne(() => Negotiable, (negotiable) => negotiable.reservation, {
+    cascade: true,
+    nullable: true,
+    eager: true,
+  })
+  @JoinColumn()
+  negotiable: Negotiable | null;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}

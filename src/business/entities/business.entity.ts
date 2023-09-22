@@ -1,5 +1,15 @@
-import * as dynamoose from 'dynamoose';
-import { AnyItem } from 'dynamoose/dist/Item';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  OneToOne,
+} from 'typeorm';
+import { Availability } from './availability.entity';
+import { Map } from './map.entity';
+import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 export enum BusinessStatus {
   Pending = 'Pending',
@@ -7,86 +17,62 @@ export enum BusinessStatus {
   Closed = 'Closed',
 }
 
-export enum WeekDays {
-  Sunday = 'Sunday',
-  Monday = 'Monday',
-  Tuesday = 'Tuesday',
-  Wednesday = 'Wednesday',
-  Thursday = 'Thursday',
-  Friday = 'Friday',
-  Saturday = 'Saturday',
-}
+@Entity('business')
+export class Business {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-const MapSchema = new dynamoose.Schema({
-  pointX: String,
-  pointY: String,
-});
+  @Column()
+  ownerId: string;
 
-const ShiftSchema = new dynamoose.Schema({
-  openingTime: { type: String, required: true },
-  closingTime: { type: String, required: true },
-});
+  @Column()
+  typeId: string;
 
-const AvailabilitySchema = new dynamoose.Schema({
-  day: { type: String, enum: Object.values(WeekDays), required: true },
-  shifts: { type: Array, schema: [{ type: Object, schema: ShiftSchema }] },
-  open: { type: Boolean, required: true },
-});
+  @Column()
+  name: string;
 
-const BusinessSchema = new dynamoose.Schema({
-  id: { type: String, hashKey: true },
-  ownerId: { type: String, required: true },
-  typeId: { type: String, required: true },
-  name: { type: String, required: true },
-  country: { type: String, required: true },
-  department: { type: String, required: true },
-  address: { type: String, required: true },
-  coordinates: { type: Object, schema: MapSchema, required: true },
-  activePremiumSubscriptionID: { type: String },
-  logoURL: { type: String },
-  multimediaURL: { type: Array, schema: [String] },
-  description: { type: String },
-  assistantsID: { type: Array, schema: [String] },
-  pendingInvitationsID: { type: Array, schema: [String] },
-  status: { type: String, enum: Object.values(BusinessStatus), required: true },
-  totalRatingSum: { type: Number, required: false, default: 0 }, // La suma total de todas las calificaciones.
-  totalRatingsCount: { type: Number, required: false, default: 0 }, // La cantidad total de calificaciones que ha recibido.
-  averageRating: { type: Number, required: false, default: 0 }, // El promedio de las calificaciones.
-  availability: {
-    type: Array,
-    schema: [{ type: Object, schema: AvailabilitySchema }],
-    required: true,
-  },
-});
+  @Column()
+  country: string;
 
-export interface IBusiness extends AnyItem {
-  id: String;
-  ownerId: String;
-  typeId: String;
-  name: String;
-  country: String;
-  department: String;
-  address: String;
-  coordinates: Object;
-  activePremiumSubscriptionID: String;
-  logoURL: String;
-  multimediaURL: Array<String>;
-  description: String;
-  assistantsID: Array<String>;
-  pendingInvitationsID: Array<String>;
+  @Column()
+  department: string;
+
+  @Column()
+  address: string;
+
+  @OneToOne(() => Map, (map) => map.business, { cascade: true })
+  @JoinColumn()
+  coordinates: Map;
+
+  @Column({ nullable: true })
+  logoURL: string;
+
+  @Column()
+  banner: string;
+
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({
+    type: 'enum',
+    enum: BusinessStatus,
+  })
   status: BusinessStatus;
-  availability: Array<IAvailability>;
-}
 
-export interface IAvailability extends AnyItem {
-  day: WeekDays;
-  shifts: Array<IShift>;
-  open: Boolean;
-}
+  @Column({ default: 0 })
+  totalRatingSum: number;
 
-export interface IShift extends AnyItem {
-  openingTime: String;
-  closingTime: String;
-}
+  @Column({ default: 0 })
+  totalRatingsCount: number;
 
-export const Business = dynamoose.model<IBusiness>('Business', BusinessSchema);
+  @Column({ default: 0 })
+  averageRating: number;
+
+  @OneToMany(() => Availability, (availability) => availability.business, {
+    cascade: true,
+  })
+  availability: Availability[];
+
+  @OneToMany(() => Reservation, (reservation) => reservation.business)
+  reservations: Reservation[];
+}

@@ -38,10 +38,6 @@ class ControlCreateDto {
 
 export class BusinessTypeCreateDto {
   @IsString()
-  @IsOptional()
-  id?: string;
-
-  @IsString()
   @IsNotEmpty()
   name: string;
 
@@ -52,10 +48,4 @@ export class BusinessTypeCreateDto {
   @IsString()
   @IsNotEmpty()
   icon: string;
-
-  @IsArray()
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => ControlCreateDto)
-  controls?: ControlCreateDto[];
 }

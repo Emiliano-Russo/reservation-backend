@@ -1,19 +1,51 @@
-import * as dynamoose from 'dynamoose';
+import { Reservation } from 'src/reservation/entities/reservation.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 
-const UserSchema = new dynamoose.Schema({
-  createdAt: { type: Date, default: Date.now },
-  id: { type: String, hashKey: true },
-  provider: String,
-  googleId: { type: String, required: false },
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
-  civilIdDoc: { type: String, required: true },
-  password: { type: String, required: true },
-  profileImage: { type: String, required: false },
-  chats: { type: Array, schema: [String], required: false },
-  emailVerified: { type: Boolean, default: false },
-  lastLogin: { type: Date, required: false },
-});
+@Entity('user')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-export const User = dynamoose.model('User', UserSchema);
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @Column({ nullable: true })
+  provider: string;
+
+  @Column({ nullable: true })
+  googleId: string;
+
+  @Column()
+  name: string;
+
+  @Column()
+  email: string;
+
+  @Column()
+  phone: string;
+
+  @Column()
+  civilIdDoc: string;
+
+  @Column()
+  password: string;
+
+  @Column({ nullable: true })
+  profileImage: string;
+
+  @Column({ default: false })
+  emailVerified: boolean;
+
+  @UpdateDateColumn({ nullable: true })
+  lastLogin: Date;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.user)
+  reservations: Reservation[];
+}

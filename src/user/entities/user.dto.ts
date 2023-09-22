@@ -1,11 +1,10 @@
 import { IsEmail, IsNotEmpty, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
-  id?: string;
-
   @IsNotEmpty()
   provider: string;
 
+  @IsOptional()
   googleId?: string;
 
   @IsNotEmpty()
