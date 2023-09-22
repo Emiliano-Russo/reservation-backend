@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Availability } from './availability.entity';
 import { Map } from './map.entity';
+import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 export enum BusinessStatus {
   Pending = 'Pending',
@@ -71,4 +72,7 @@ export class Business {
     cascade: true,
   })
   availability: Availability[];
+
+  @OneToMany(() => Reservation, (reservation) => reservation.business)
+  reservations: Reservation[];
 }

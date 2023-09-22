@@ -1,5 +1,6 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { Negotiable, ReservationStatus } from './reservation.entity';
+import { ReservationStatus } from './reservation.entity';
+import { Negotiable } from './negotiable.entity';
 
 export class ReservationUpdateDto {
   @IsOptional()

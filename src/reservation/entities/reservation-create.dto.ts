@@ -7,7 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Negotiable } from './reservation.entity';
+import { Negotiable } from './negotiable.entity';
 
 export class ReservationCreateDto {
   @IsString()

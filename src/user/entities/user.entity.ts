@@ -1,9 +1,11 @@
+import { Reservation } from 'src/reservation/entities/reservation.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity('user')
@@ -43,4 +45,7 @@ export class User {
 
   @UpdateDateColumn({ nullable: true })
   lastLogin: Date;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.user)
+  reservations: Reservation[];
 }

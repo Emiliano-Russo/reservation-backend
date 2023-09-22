@@ -1,5 +1,5 @@
 import { IsEnum } from 'class-validator';
-import { AcceptStatus } from './reservation.entity';
+import { AcceptStatus } from './negotiable.entity';
 
 export class UserResponseProposedScheduleDto {
   @IsEnum(AcceptStatus, {

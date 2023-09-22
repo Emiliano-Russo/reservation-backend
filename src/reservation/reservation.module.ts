@@ -5,12 +5,13 @@ import { BusinessModule } from 'src/business/business.module';
 import { UserModule } from 'src/user/user.module';
 import { Reservation } from './entities/reservation.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Negotiable } from './entities/negotiable.entity';
 
 @Module({
   imports: [
     BusinessModule,
     UserModule,
-    TypeOrmModule.forFeature([Reservation]),
+    TypeOrmModule.forFeature([Reservation, Negotiable]),
   ],
   controllers: [ReservationController],
   providers: [ReservationService],

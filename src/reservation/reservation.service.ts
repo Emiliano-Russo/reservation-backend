@@ -1,9 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import {
-  AcceptStatus,
-  Reservation,
-  ReservationStatus,
-} from './entities/reservation.entity';
+import { Reservation, ReservationStatus } from './entities/reservation.entity';
 import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
@@ -17,12 +13,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BusinessService } from 'src/business/business.service';
 import { UserService } from 'src/user/user.service';
+import { AcceptStatus, Negotiable } from './entities/negotiable.entity';
 
 @Injectable()
 export class ReservationService {
   constructor(
     @InjectRepository(Reservation)
     private readonly reservationRepository: Repository<Reservation>,
+    @InjectRepository(Negotiable)
+    private readonly negotiableRepository: Repository<Negotiable>,
     private readonly businessService: BusinessService,
     private readonly userService: UserService,
   ) {}
@@ -97,6 +96,8 @@ export class ReservationService {
       createReservationDto.businessId,
     );
 
+    console.log('createReservationDto: ', createReservationDto);
+
     if (!user) throw new NotFoundException('User Not Found');
     if (!business) throw new NotFoundException('Business Not Found');
 
@@ -139,17 +140,13 @@ export class ReservationService {
   ): Promise<Reservation> {
     const reservation = await this.reservationRepository.findOne({
       where: { id },
+      relations: ['business'],
     });
+
+    console.log('reservation: ', reservation);
 
     if (!reservation) {
       throw new NotFoundException(`Reservation with ID ${id} not found`);
-    }
-
-    // Carga la relación de negocio si no está cargada
-    if (!reservation.business) {
-      this.reservationRepository.manager
-        .getTreeRepository(Reservation)
-        .findAncestorsTree(reservation);
     }
 
     // Actualiza los campos de calificación y comentario de la reserva
@@ -171,6 +168,8 @@ export class ReservationService {
         reservation.business,
       );
     }
+
+    console.log('final reservation... ', reservation);
 
     return await this.reservationRepository.save(reservation);
   }
@@ -195,6 +194,9 @@ export class ReservationService {
       where: { id },
     });
 
+    console.log('--- ', id, date);
+    console.log('--- reservation: ', reservation);
+
     if (!reservation) {
       throw new NotFoundException(`Reservation with ID ${id} not found`);
     }
@@ -204,8 +206,8 @@ export class ReservationService {
     }
 
     // Actualiza los valores en la entidad
-    reservation.negotiable.dateRange = { ...reservation.negotiable.dateRange }; // Esto asume que `dateRange` es un objeto
-    reservation.negotiable.timeRange = { ...reservation.negotiable.timeRange }; // Esto asume que `timeRange` es un objeto
+    // reservation.negotiable.dateRange = { ...reservation.negotiable.dateRange }; // Esto asume que `dateRange` es un objeto
+    // reservation.negotiable.timeRange = { ...reservation.negotiable.timeRange }; // Esto asume que `timeRange` es un objeto
     reservation.negotiable.businessProposedSchedule = date;
     reservation.negotiable.acceptedBusinessProposed = AcceptStatus.Unanswered;
 
@@ -219,6 +221,8 @@ export class ReservationService {
     const reservation = await this.reservationRepository.findOne({
       where: { id },
     });
+
+    console.log('reservation: ', reservation);
 
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
@@ -242,13 +246,21 @@ export class ReservationService {
         reservation.negotiable.businessProposedSchedule,
       );
       reservation.status = ReservationStatus.Confirmed;
-      delete reservation.negotiable; // Si deseas eliminar el campo 'negotiable' después de aceptar
+
+      // Guarda el ID del negotiable para eliminarlo después
+      const negotiableId = reservation.negotiable.id;
+      reservation.negotiable = null;
+
+      // Guarda la reserva con el negotiable en null
+      await this.reservationRepository.save(reservation);
+
+      // Elimina el registro negotiable de la base de datos
+      await this.negotiableRepository.delete(negotiableId);
     } else if (value === AcceptStatus.NotAccepted) {
       // Si deseas hacer alguna actualización específica cuando no es aceptado, hazlo aquí.
       reservation.negotiable.acceptedBusinessProposed =
         AcceptStatus.NotAccepted;
+      return await this.reservationRepository.save(reservation);
     }
-
-    return await this.reservationRepository.save(reservation);
   }
 }

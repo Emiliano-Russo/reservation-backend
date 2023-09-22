@@ -13,8 +13,8 @@ import { ReservationCreateDto } from './entities/reservation-create.dto';
 import { ReservationUpdateDto } from './entities/reservation-update.dto';
 import { ReservationService } from './reservation.service';
 import { RatingDto } from './entities/rating.dto';
-import { AcceptStatus } from './entities/reservation.entity';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
+import { AcceptStatus } from './entities/negotiable.entity';
 
 @Controller('reservation')
 export class ReservationController {

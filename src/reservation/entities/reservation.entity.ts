@@ -7,7 +7,9 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  OneToOne,
 } from 'typeorm';
+import { Negotiable } from './negotiable.entity';
 
 export enum ReservationStatus {
   Pending = 'Pending',
@@ -18,63 +20,21 @@ export enum ReservationStatus {
   NotAttended = 'NotAttended',
 }
 
-export enum AcceptStatus {
-  Unanswered = 'Unanswered',
-  Accepted = 'Accepted',
-  NotAccepted = 'NotAccepted',
-}
-
-@Entity('range')
-export class Range {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
-  start: string;
-
-  @Column({ nullable: true })
-  end: string;
-}
-
-@Entity('negotiable')
-export class Negotiable {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @ManyToOne(() => Range)
-  @JoinColumn()
-  dateRange: Range;
-
-  @ManyToOne(() => Range)
-  @JoinColumn()
-  timeRange: Range;
-
-  @Column({ nullable: true })
-  businessProposedSchedule: string;
-
-  @Column({
-    type: 'enum',
-    enum: AcceptStatus,
-    nullable: true,
-  })
-  acceptedBusinessProposed: AcceptStatus;
-}
-
 @Entity('reservation')
 export class Reservation {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.reservations)
   @JoinColumn()
   user: User;
 
-  @ManyToOne(() => Business)
+  @ManyToOne(() => Business, (business) => business.reservations)
   @JoinColumn()
   business: Business;
 
   @Column({ type: 'date', nullable: true })
-  reservationDate: Date;
+  reservationDate: Date | null;
 
   @Column({ nullable: true })
   rating: number;
@@ -88,9 +48,13 @@ export class Reservation {
   })
   status: ReservationStatus;
 
-  @ManyToOne(() => Negotiable)
+  @OneToOne(() => Negotiable, (negotiable) => negotiable.reservation, {
+    cascade: true,
+    nullable: true,
+    eager: true,
+  })
   @JoinColumn()
-  negotiable: Negotiable;
+  negotiable: Negotiable | null;
 
   @CreateDateColumn()
   createdAt: Date;
