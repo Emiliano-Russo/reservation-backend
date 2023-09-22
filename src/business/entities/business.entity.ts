@@ -5,64 +5,15 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
+import { Availability } from './availability.entity';
+import { Map } from './map.entity';
 
 export enum BusinessStatus {
   Pending = 'Pending',
   Operating = 'Operating',
   Closed = 'Closed',
-}
-
-export enum WeekDays {
-  Sunday = 'Sunday',
-  Monday = 'Monday',
-  Tuesday = 'Tuesday',
-  Wednesday = 'Wednesday',
-  Thursday = 'Thursday',
-  Friday = 'Friday',
-  Saturday = 'Saturday',
-}
-
-@Entity('map')
-export class Map {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
-  pointX: string;
-
-  @Column()
-  pointY: string;
-}
-
-@Entity('shift')
-export class Shift {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
-  openingTime: string;
-
-  @Column()
-  closingTime: string;
-}
-
-@Entity('availability')
-export class Availability {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({
-    type: 'enum',
-    enum: WeekDays,
-  })
-  day: WeekDays;
-
-  @OneToMany(() => Shift, (shift) => shift.id)
-  shifts: Shift[];
-
-  @Column()
-  open: boolean;
 }
 
 @Entity('business')
@@ -88,7 +39,7 @@ export class Business {
   @Column()
   address: string;
 
-  @ManyToOne(() => Map)
+  @OneToOne(() => Map, (map) => map.business, { cascade: true })
   @JoinColumn()
   coordinates: Map;
 
@@ -116,6 +67,8 @@ export class Business {
   @Column({ default: 0 })
   averageRating: number;
 
-  @OneToMany(() => Availability, (availability) => availability.id)
+  @OneToMany(() => Availability, (availability) => availability.business, {
+    cascade: true,
+  })
   availability: Availability[];
 }

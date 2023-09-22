@@ -1,12 +1,51 @@
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
-import { Availability, BusinessStatus } from './business.entity';
+import { BusinessStatus } from './business.entity';
+import { Type } from 'class-transformer';
+import { WeekDays } from './availability.entity';
+
+class CoordinatesDto {
+  @IsString()
+  @IsNotEmpty()
+  pointX: string;
+
+  @IsString()
+  @IsNotEmpty()
+  pointY: string;
+}
+
+export class ShiftDto {
+  @IsString()
+  @IsNotEmpty()
+  openingTime: string;
+
+  @IsString()
+  @IsNotEmpty()
+  closingTime: string;
+}
+
+class AvailabilityDto {
+  @IsNotEmpty()
+  @IsEnum(WeekDays)
+  day: WeekDays;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ShiftDto)
+  shifts: ShiftDto[];
+
+  @IsBoolean()
+  @IsNotEmpty()
+  open: boolean;
+}
 
 export class BusinessCreateDto {
   @IsString()
@@ -34,8 +73,9 @@ export class BusinessCreateDto {
   address: string;
 
   @IsObject()
-  @IsNotEmpty()
-  coordinates: any; // <-- Considerar una validación más específica aquí
+  @ValidateNested()
+  @Type(() => CoordinatesDto) // Esto es necesario para que class-transformer instancie correctamente el objeto nested
+  coordinates: CoordinatesDto;
 
   @IsString()
   @IsOptional()
@@ -53,7 +93,8 @@ export class BusinessCreateDto {
   @IsEnum(BusinessStatus)
   status: BusinessStatus;
 
-  @IsNotEmpty()
   @IsArray()
-  availability: Availability[];
+  @ValidateNested({ each: true })
+  @Type(() => AvailabilityDto)
+  availability: AvailabilityDto[];
 }

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Business, BusinessStatus, WeekDays } from './entities/business.entity';
+import { Business, BusinessStatus } from './entities/business.entity';
 import { BusinessCreateDto } from './entities/business-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { BusinessUpdateDto } from './entities/business-update.dto';
@@ -12,6 +12,9 @@ import {
 } from 'src/interfaces/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Availability } from './entities/availability.entity';
+import { Shift } from './entities/shift.entity';
+import { Map } from './entities/map.entity';
 
 @Injectable()
 export class BusinessService {
@@ -19,6 +22,12 @@ export class BusinessService {
     private readonly s3Service: S3Service,
     @InjectRepository(Business)
     private readonly businessRepository: Repository<Business>,
+    @InjectRepository(Availability)
+    private readonly availabilityRepository: Repository<Availability>,
+    @InjectRepository(Map)
+    private readonly mapRepository: Repository<Map>,
+    @InjectRepository(Shift)
+    private readonly shiftRepository: Repository<Shift>,
   ) {}
 
   async getBusinessByOwnerId(
@@ -128,6 +137,21 @@ export class BusinessService {
     logo: any,
     banner: any,
   ): Promise<any> {
+    console.log('\x1b[31m%s\x1b[0m', '############################');
+    // Verificar y parsear el campo coordinates si es una cadena de texto
+    if (typeof businessCreateDto.coordinates === 'string') {
+      businessCreateDto.coordinates = JSON.parse(businessCreateDto.coordinates);
+    }
+
+    // Verificar y parsear el campo availability si es una cadena de texto
+    if (typeof businessCreateDto.availability === 'string') {
+      businessCreateDto.availability = JSON.parse(
+        businessCreateDto.availability,
+      );
+    }
+
+    console.log('businessCreateDto ', businessCreateDto);
+
     let logoUrl =
       'https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=2000'; // URL por defecto
     let bannerUrl =
@@ -153,14 +177,31 @@ export class BusinessService {
       bannerUrl = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${businessCreateDto.ownerId}/banner/${sanitizedBannerFilename}`;
     }
 
+    // Crear y guardar la entidad Map
+    const mapEntity = this.mapRepository.create(businessCreateDto.coordinates);
+
+    const availabilityEntities = businessCreateDto.availability.map((avail) => {
+      const availabilityEntity = this.availabilityRepository.create(avail);
+      // Aquí también deberías manejar la creación de los shifts relacionados
+      return availabilityEntity;
+    });
+
     const business = this.businessRepository.create({
-      ...businessCreateDto,
+      typeId: businessCreateDto.typeId,
+      ownerId: businessCreateDto.ownerId,
+      name: businessCreateDto.name,
+      description: businessCreateDto.description,
+      department: businessCreateDto.department,
+      country: businessCreateDto.country,
+      address: businessCreateDto.address,
+      coordinates: mapEntity,
       logoURL: logoUrl,
-      banner: bannerUrl, // Asegúrate de que el campo en la entidad se llama 'banner' y no 'multimediaURL'
+      banner: bannerUrl,
       status: BusinessStatus.Pending,
       totalRatingSum: 0,
       totalRatingsCount: 0,
       averageRating: 0,
+      availability: availabilityEntities,
     });
 
     return await this.businessRepository.save(business);
