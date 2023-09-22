@@ -102,25 +102,23 @@ export class BusinessService {
     if (!business) {
       throw new NotFoundException(`Business with ID ${id} not found`);
     }
+    console.log('logo: ', logo);
 
     if (logo) {
-      const sanitizedFilename = logo[0].originalname.replace(/\s+/g, '');
-      logo[0].originalname = sanitizedFilename;
+      const sanitizedFilename = logo.originalname.replace(/\s+/g, '');
+      logo.originalname = sanitizedFilename;
       await this.s3Service.uploadFile(
-        logo[0],
+        logo,
         `business/${business.ownerId}/logo/`,
       );
       business.logoURL = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${business.ownerId}/logo/${sanitizedFilename}`;
     }
 
     if (banner) {
-      const sanitizedBannerFilename = banner[0].originalname.replace(
-        /\s+/g,
-        '',
-      );
-      banner[0].originalname = sanitizedBannerFilename;
+      const sanitizedBannerFilename = banner.originalname.replace(/\s+/g, '');
+      banner.originalname = sanitizedBannerFilename;
       await this.s3Service.uploadFile(
-        banner[0],
+        banner,
         `business/${business.ownerId}/banner/`,
       );
       business.banner = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${business.ownerId}/banner/${sanitizedBannerFilename}`;
