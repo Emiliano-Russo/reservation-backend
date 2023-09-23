@@ -70,6 +70,7 @@ export class Business {
 
   @OneToMany(() => Availability, (availability) => availability.business, {
     cascade: true,
+    eager: true,
   })
   availability: Availability[];
 

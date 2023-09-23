@@ -29,7 +29,10 @@ export class Availability {
   })
   day: WeekDays;
 
-  @OneToMany(() => Shift, (shift) => shift.availability, { cascade: true })
+  @OneToMany(() => Shift, (shift) => shift.availability, {
+    cascade: true,
+    eager: true,
+  })
   shifts: Shift[];
 
   @Column()
