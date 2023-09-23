@@ -96,8 +96,6 @@ export class ReservationService {
       createReservationDto.businessId,
     );
 
-    console.log('createReservationDto: ', createReservationDto);
-
     if (!user) throw new NotFoundException('User Not Found');
     if (!business) throw new NotFoundException('Business Not Found');
 

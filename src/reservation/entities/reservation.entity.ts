@@ -25,15 +25,17 @@ export class Reservation {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.reservations)
+  @ManyToOne(() => User, (user) => user.reservations, { eager: true })
   @JoinColumn()
   user: User;
 
-  @ManyToOne(() => Business, (business) => business.reservations)
+  @ManyToOne(() => Business, (business) => business.reservations, {
+    eager: true,
+  })
   @JoinColumn()
   business: Business;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   reservationDate: Date | null;
 
   @Column({ nullable: true })
