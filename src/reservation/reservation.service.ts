@@ -126,6 +126,13 @@ export class ReservationService {
       throw new NotFoundException(`Reservation with ID ${id} not found`);
     }
 
+    if (
+      updateDto.status !== undefined &&
+      updateDto.status === ReservationStatus.Rejected
+    ) {
+      reservation.negotiable = null; // o `delete reservation.negotiable;` si realmente quieres eliminar la propiedad
+    }
+
     // Actualiza los campos de la reserva con los valores del DTO
     Object.assign(reservation, updateDto);
 
