@@ -25,17 +25,20 @@ export class ReservationController {
     @Query() paginationDto: PaginationDto,
     @Query('businessId') businessId?: string,
     @Query('userId') userId?: string,
+    @Query('search') search: string = '',
   ) {
     if (businessId) {
       return this.reservationService.getReservationByBusinessId(
         businessId,
         paginationDto,
+        search,
       );
     }
     if (userId) {
       return this.reservationService.getReservationsByUserId(
         userId,
         paginationDto,
+        search,
       );
     }
     throw new BadRequestException('Provide either businessId or userId');

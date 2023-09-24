@@ -10,7 +10,7 @@ import {
   PaginationDto,
 } from 'src/interfaces/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { BusinessService } from 'src/business/business.service';
 import { UserService } from 'src/user/user.service';
 import { AcceptStatus, Negotiable } from './entities/negotiable.entity';
@@ -39,17 +39,27 @@ export class ReservationService {
   async getReservationByBusinessId(
     businessId: string,
     paginationDto: PaginationDto,
+    search: string = '',
   ): Promise<PaginatedResponse> {
     const { limit, page } = paginationDto;
 
-    const [items, total] = await this.reservationRepository.findAndCount({
-      where: { business: { id: businessId } },
-      take: limit,
-      skip: (page - 1) * limit,
-      order: {
-        createdAt: 'DESC', // Esto asegura que los resultados estén en orden descendente basados en la fecha de creación
-      },
-    });
+    const queryBuilder =
+      this.reservationRepository.createQueryBuilder('reservation');
+
+    queryBuilder
+      .leftJoinAndSelect('reservation.user', 'user')
+      .where('reservation.business.id = :businessId', { businessId })
+      .take(limit)
+      .skip((page - 1) * limit)
+      .orderBy('reservation.createdAt', 'DESC');
+
+    if (search && search.trim() !== '') {
+      queryBuilder.andWhere('user.name LIKE :search', {
+        search: `%${search.trim()}%`,
+      });
+    }
+
+    const [items, total] = await queryBuilder.getManyAndCount();
 
     const totalPages = Math.ceil(total / limit);
 
@@ -65,17 +75,27 @@ export class ReservationService {
   async getReservationsByUserId(
     userId: string,
     paginationDto: PaginationDto,
+    search: string = '',
   ): Promise<PaginatedResponse> {
     const { limit, page } = paginationDto;
 
-    const [items, total] = await this.reservationRepository.findAndCount({
-      where: { user: { id: userId } },
-      take: limit,
-      skip: (page - 1) * limit,
-      order: {
-        createdAt: 'DESC', // Esto asegura que los resultados estén en orden descendente basados en la fecha de creación
-      },
-    });
+    const queryBuilder =
+      this.reservationRepository.createQueryBuilder('reservation');
+
+    queryBuilder
+      .leftJoinAndSelect('reservation.business', 'business')
+      .where('reservation.user.id = :userId', { userId })
+      .take(limit)
+      .skip((page - 1) * limit)
+      .orderBy('reservation.createdAt', 'DESC');
+
+    if (search && search.trim() !== '') {
+      queryBuilder.andWhere('business.name LIKE :search', {
+        search: `%${search.trim()}%`,
+      });
+    }
+
+    const [items, total] = await queryBuilder.getManyAndCount();
 
     const totalPages = Math.ceil(total / limit);
 
