@@ -50,13 +50,18 @@ export class BusinessController {
     @Query('businessId') businessId?: string,
     @Query('ownerId') ownerId?: string,
     @Query('typeId') typeId?: string,
+    @Query('search') search: string = '',
   ) {
     if (businessId) {
       return this.businessService.getBusinessById(businessId);
     } else if (ownerId) {
       return this.businessService.getBusinessByOwnerId(ownerId, paginationDto);
     } else if (typeId) {
-      return this.businessService.getBusinessByTypeId(typeId, paginationDto);
+      return this.businessService.getBusinessByTypeId(
+        typeId,
+        paginationDto,
+        search,
+      );
     } else {
       throw new BadRequestException('Invalid query parameters.');
     }

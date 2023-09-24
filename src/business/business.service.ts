@@ -11,7 +11,7 @@ import {
   PaginationDto,
 } from 'src/interfaces/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Availability } from './entities/availability.entity';
 import { Shift } from './entities/shift.entity';
 import { Map } from './entities/map.entity';
@@ -59,11 +59,18 @@ export class BusinessService {
   async getBusinessByTypeId(
     typeId: string,
     paginationDto: PaginationDto,
+    search: string,
   ): Promise<PaginatedResponse> {
     const { limit, page } = paginationDto;
 
+    const whereCondition = { typeId: typeId };
+
+    if (search && search.trim() !== '') {
+      whereCondition['name'] = Like(`%${search.trim()}%`);
+    }
+
     const [items, total] = await this.businessRepository.findAndCount({
-      where: { typeId: typeId },
+      where: whereCondition,
       take: limit,
       skip: (page - 1) * limit,
       order: {
