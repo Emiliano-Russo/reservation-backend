@@ -15,6 +15,7 @@ import { ReservationService } from './reservation.service';
 import { RatingDto } from './entities/rating.dto';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
 import { AcceptStatus } from './entities/negotiable.entity';
+import { ReservationStatus } from './entities/reservation.entity';
 
 @Controller('reservation')
 export class ReservationController {
@@ -26,12 +27,18 @@ export class ReservationController {
     @Query('businessId') businessId?: string,
     @Query('userId') userId?: string,
     @Query('search') search: string = '',
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('status') status?: ReservationStatus,
   ) {
     if (businessId) {
       return this.reservationService.getReservationByBusinessId(
         businessId,
         paginationDto,
         search,
+        startDate,
+        endDate,
+        status,
       );
     }
     if (userId) {
@@ -39,6 +46,9 @@ export class ReservationController {
         userId,
         paginationDto,
         search,
+        startDate,
+        endDate,
+        status,
       );
     }
     throw new BadRequestException('Provide either businessId or userId');

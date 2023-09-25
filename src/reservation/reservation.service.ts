@@ -40,63 +40,95 @@ export class ReservationService {
     businessId: string,
     paginationDto: PaginationDto,
     search: string = '',
+    startDate?: string,
+    endDate?: string,
+    status?: ReservationStatus,
   ): Promise<PaginatedResponse> {
-    const { limit, page } = paginationDto;
-
-    const queryBuilder =
-      this.reservationRepository.createQueryBuilder('reservation');
-
-    queryBuilder
-      .leftJoinAndSelect('reservation.user', 'user')
-      .where('reservation.business.id = :businessId', { businessId })
-      .take(limit)
-      .skip((page - 1) * limit)
-      .orderBy('reservation.createdAt', 'DESC');
-
-    if (search && search.trim() !== '') {
-      queryBuilder.andWhere('user.name LIKE :search', {
-        search: `%${search.trim()}%`,
-      });
-    }
-
-    const [items, total] = await queryBuilder.getManyAndCount();
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      items,
-      total,
-      page,
-      limit,
-      totalPages,
-    };
+    return this.getReservationsWithFilters(
+      { businessId },
+      paginationDto,
+      search,
+      startDate,
+      endDate,
+      status,
+    );
   }
 
   async getReservationsByUserId(
     userId: string,
     paginationDto: PaginationDto,
     search: string = '',
+    startDate?: string,
+    endDate?: string,
+    status?: ReservationStatus,
+  ): Promise<PaginatedResponse> {
+    return this.getReservationsWithFilters(
+      { userId },
+      paginationDto,
+      search,
+      startDate,
+      endDate,
+      status,
+    );
+  }
+
+  private async getReservationsWithFilters(
+    filter: { userId?: string; businessId?: string },
+    paginationDto: PaginationDto,
+    search: string = '',
+    startDate?: string,
+    endDate?: string,
+    status?: ReservationStatus,
   ): Promise<PaginatedResponse> {
     const { limit, page } = paginationDto;
+    console.log('startDate: ', startDate);
+    console.log('endDate: ', endDate);
 
     const queryBuilder =
       this.reservationRepository.createQueryBuilder('reservation');
 
+    if (filter.userId) {
+      queryBuilder.leftJoinAndSelect('reservation.business', 'business');
+      queryBuilder.where('reservation.user.id = :userId', {
+        userId: filter.userId,
+      });
+      if (search && search.trim() !== '') {
+        queryBuilder.andWhere('business.name LIKE :search', {
+          search: `%${search.trim()}%`,
+        });
+      }
+    } else if (filter.businessId) {
+      queryBuilder.leftJoinAndSelect('reservation.user', 'user');
+      queryBuilder.where('reservation.business.id = :businessId', {
+        businessId: filter.businessId,
+      });
+      if (search && search.trim() !== '') {
+        queryBuilder.andWhere('user.name LIKE :search', {
+          search: `%${search.trim()}%`,
+        });
+      }
+    }
+
     queryBuilder
-      .leftJoinAndSelect('reservation.business', 'business')
-      .where('reservation.user.id = :userId', { userId })
       .take(limit)
       .skip((page - 1) * limit)
       .orderBy('reservation.createdAt', 'DESC');
 
-    if (search && search.trim() !== '') {
-      queryBuilder.andWhere('business.name LIKE :search', {
-        search: `%${search.trim()}%`,
-      });
+    if (startDate && endDate) {
+      queryBuilder.andWhere(
+        'reservation.reservationDate BETWEEN :startDate AND :endDate',
+        {
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+        },
+      );
+    }
+
+    if (status) {
+      queryBuilder.andWhere('reservation.status = :status', { status });
     }
 
     const [items, total] = await queryBuilder.getManyAndCount();
-
     const totalPages = Math.ceil(total / limit);
 
     return {
