@@ -5,4 +5,6 @@ export class UpdateUserDto {
   phone?: string;
   civilIdDoc?: string;
   profileImage?: string;
+  country?: string;
+  department?: string;
 }

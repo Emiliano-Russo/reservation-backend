@@ -31,6 +31,7 @@ export class UserController {
     // createUserDto.emailVerified =
     //   createUserDto.emailVerified == 'true' ? true : false;
     console.log('what we recive: ', createUserDto);
+    console.log('profile image: ', profileImage);
     return this.userService.createUser(createUserDto, profileImage);
   }
 
