@@ -8,6 +8,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { MailService } from 'src/mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UpdateUserDto } from './entities/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -90,5 +91,28 @@ export class UserService {
       throw new Error('Email cannot be undefined');
     }
     return this.userRepository.findOne({ where: { email } });
+  }
+
+  // user.service.ts
+  async updateUser(
+    id: string,
+    data: UpdateUserDto,
+    profileImage: any,
+  ): Promise<User> {
+    const user = await this.getUser(id); // Esto arrojará un error si el usuario no existe
+
+    if (profileImage) {
+      const idImage = uuidv4();
+      const sanitizedFilename = profileImage.originalname.replace(/\s+/g, '');
+      profileImage.originalname = idImage + sanitizedFilename;
+      const folderS3 = 'avatars/';
+      await this.s3Service.uploadFile(profileImage, folderS3);
+      const imageLink = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/${folderS3}${profileImage.originalname}`;
+      user.profileImage = imageLink;
+    }
+
+    Object.assign(user, data); // Esto copiará los valores de `data` al usuario
+
+    return this.userRepository.save(user);
   }
 }
