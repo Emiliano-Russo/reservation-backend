@@ -24,7 +24,7 @@ import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) {}
+  constructor(private readonly businessService: BusinessService) { }
 
   @Post()
   @UseInterceptors(
@@ -62,6 +62,8 @@ export class BusinessController {
         paginationDto,
         search,
       );
+    } else if (paginationDto) {
+      return this.businessService.getBusiness(paginationDto);
     } else {
       throw new BadRequestException('Invalid query parameters.');
     }

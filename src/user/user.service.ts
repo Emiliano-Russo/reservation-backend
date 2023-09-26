@@ -17,7 +17,30 @@ export class UserService {
     private s3Service: S3Service,
     private authService: AuthService,
     private mailService: MailService,
-  ) {}
+  ) { }
+
+  async getUsers() {
+    const user = await this.userRepository;
+    if (!user) {
+      throw new NotFoundException('Users not found');
+    }
+    return user;
+  }
+
+  async approveUser(id: string) {
+    const user: User = await this.getUser(id);
+    const updateUser = {
+      emailVerified: true
+    }
+
+    if (user.emailVerified) {
+      throw new Error('Email is verified');
+    }
+
+    Object.assign(user, updateUser);
+
+    return await this.userRepository.save(user);
+  }
 
   async getUser(id: string) {
     const user = await this.userRepository.findOne({ where: { id: id } });

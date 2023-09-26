@@ -24,7 +24,41 @@ export class ReservationService {
     private readonly negotiableRepository: Repository<Negotiable>,
     private readonly businessService: BusinessService,
     private readonly userService: UserService,
-  ) {}
+  ) { }
+
+  async getReservations(
+    paginationDto: PaginationDto,
+    search: string = '',
+  ): Promise<PaginatedResponse> {
+    const { limit, page } = paginationDto;
+
+    const queryBuilder =
+      this.reservationRepository.createQueryBuilder('reservation');
+
+    queryBuilder
+      .leftJoinAndSelect('reservation.user', 'user')
+      .take(limit)
+      .skip((page - 1) * limit)
+      .orderBy('reservation.createdAt', 'DESC');
+
+    if (search && search.trim() !== '') {
+      queryBuilder.andWhere('user.name LIKE :search', {
+        search: `%${search.trim()}%`,
+      });
+    }
+
+    const [items, total] = await queryBuilder.getManyAndCount();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
 
   async getReservation(id: string): Promise<Reservation | null> {
     const reservation = await this.reservationRepository.findOne({

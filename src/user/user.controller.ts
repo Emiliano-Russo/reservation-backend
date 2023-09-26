@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -13,11 +14,21 @@ import { CreateUserDto } from './entities/user.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get(':userId')
   async get(@Param('userId') userId: string) {
     return this.userService.getUser(userId);
+  }
+
+  @Get()
+  async getUsers() {
+    return this.getUsers();
+  }
+
+  @Patch(':userId')
+  async approveUser(@Param('userId') id: String) {
+    return this.approveUser(id);
   }
 
   @Post()

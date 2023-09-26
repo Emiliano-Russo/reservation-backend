@@ -18,7 +18,7 @@ import { AcceptStatus } from './entities/negotiable.entity';
 
 @Controller('reservation')
 export class ReservationController {
-  constructor(private readonly reservationService: ReservationService) {}
+  constructor(private readonly reservationService: ReservationService) { }
 
   @Get()
   async getReservations(
@@ -39,6 +39,12 @@ export class ReservationController {
         userId,
         paginationDto,
         search,
+      );
+    }
+    if (paginationDto) {
+      return this.reservationService.getReservations(
+        paginationDto,
+        search
       );
     }
     throw new BadRequestException('Provide either businessId or userId');

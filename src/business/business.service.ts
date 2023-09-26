@@ -28,7 +28,31 @@ export class BusinessService {
     private readonly mapRepository: Repository<Map>,
     @InjectRepository(Shift)
     private readonly shiftRepository: Repository<Shift>,
-  ) {}
+  ) { }
+
+  async getBusiness(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse> {
+    const { limit, page } = paginationDto;
+
+    const [items, total] = await this.businessRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      order: {
+        id: 'ASC',
+      },
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
 
   async getBusinessByOwnerId(
     ownerId: string,
