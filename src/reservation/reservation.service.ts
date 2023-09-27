@@ -162,6 +162,7 @@ export class ReservationService {
         ? new Date(createReservationDto.date)
         : undefined,
       negotiable: createReservationDto.negotiable,
+      bookingInstructions: createReservationDto.bookingInstructions,
       status: ReservationStatus.Pending,
       createdAt: new Date(),
     });

@@ -15,6 +15,7 @@ import { Like, Repository } from 'typeorm';
 import { Availability } from './entities/availability.entity';
 import { Shift } from './entities/shift.entity';
 import { Map } from './entities/map.entity';
+import { LocationDto } from './entities/location.entity';
 
 @Injectable()
 export class BusinessService {
@@ -60,13 +61,26 @@ export class BusinessService {
     typeId: string,
     paginationDto: PaginationDto,
     search: string,
+    locationDto: LocationDto,
   ): Promise<PaginatedResponse> {
+    console.log('typeID: ', typeId);
+    console.log('pagination: ', paginationDto);
+    console.log('search: ', search);
+    console.log('location ', locationDto);
     const { limit, page } = paginationDto;
 
     const whereCondition = { typeId: typeId };
 
     if (search && search.trim() !== '') {
       whereCondition['name'] = Like(`%${search.trim()}%`);
+    }
+
+    // Agregar las condiciones de location si están presentes
+    if (locationDto.country) {
+      whereCondition['country'] = locationDto.country;
+    }
+    if (locationDto.department) {
+      whereCondition['department'] = locationDto.department;
     }
 
     const [items, total] = await this.businessRepository.findAndCount({

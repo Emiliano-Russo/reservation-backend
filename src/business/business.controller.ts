@@ -21,6 +21,7 @@ import {
   FilesInterceptor,
 } from '@nestjs/platform-express';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
+import { LocationDto } from './entities/location.entity';
 
 @Controller('business')
 export class BusinessController {
@@ -51,6 +52,7 @@ export class BusinessController {
     @Query('ownerId') ownerId?: string,
     @Query('typeId') typeId?: string,
     @Query('search') search: string = '',
+    @Query() locationDto?: LocationDto,
   ) {
     if (businessId) {
       return this.businessService.getBusinessById(businessId);
@@ -61,6 +63,7 @@ export class BusinessController {
         typeId,
         paginationDto,
         search,
+        locationDto,
       );
     } else {
       throw new BadRequestException('Invalid query parameters.');
