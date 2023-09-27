@@ -81,11 +81,14 @@ export class ReservationService {
     status?: ReservationStatus,
   ): Promise<PaginatedResponse> {
     const { limit, page } = paginationDto;
-    console.log('startDate: ', startDate);
-    console.log('endDate: ', endDate);
 
     const queryBuilder =
       this.reservationRepository.createQueryBuilder('reservation');
+
+    // JOIN con Negotiable
+    queryBuilder.leftJoinAndSelect('reservation.negotiable', 'negotiable');
+    queryBuilder.leftJoinAndSelect('negotiable.dateRange', 'dateRange');
+    queryBuilder.leftJoinAndSelect('negotiable.timeRange', 'timeRange');
 
     if (filter.userId) {
       queryBuilder.leftJoinAndSelect('reservation.business', 'business');
