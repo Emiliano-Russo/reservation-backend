@@ -92,4 +92,15 @@ export class UserService {
 
     return this.userRepository.save(user);
   }
+
+  async addLoyaltyPoints(id: string, amount: number): Promise<User> {
+    // Buscar al usuario por su ID
+    const user = await this.getUser(id); // Esto arrojará un error si el usuario no existe
+
+    // Añadir la cantidad de puntos de lealtad
+    user.loyaltyPoints += amount;
+
+    // Guardar el usuario actualizado en la base de datos
+    return this.userRepository.save(user);
+  }
 }

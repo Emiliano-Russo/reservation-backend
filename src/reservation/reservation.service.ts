@@ -167,6 +167,7 @@ export class ReservationService {
       createdAt: new Date(),
     });
 
+    this.userService.addLoyaltyPoints(user.id, 10);
     return await this.reservationRepository.save(reservation);
   }
 
@@ -201,7 +202,7 @@ export class ReservationService {
   ): Promise<Reservation> {
     const reservation = await this.reservationRepository.findOne({
       where: { id },
-      relations: ['business'],
+      relations: ['business', 'user'],
     });
 
     console.log('reservation: ', reservation);
@@ -231,6 +232,8 @@ export class ReservationService {
     }
 
     console.log('final reservation... ', reservation);
+
+    this.userService.addLoyaltyPoints(reservation.user.id, 5);
 
     return await this.reservationRepository.save(reservation);
   }
