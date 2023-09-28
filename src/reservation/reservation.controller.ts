@@ -15,7 +15,7 @@ import { ReservationService } from './reservation.service';
 import { RatingDto } from './entities/rating.dto';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
 import { AcceptStatus } from './entities/negotiable.entity';
-import { ReservationStatus } from './entities/reservation.entity';
+import { Reservation, ReservationStatus } from './entities/reservation.entity';
 
 @Controller('reservation')
 export class ReservationController {
@@ -52,6 +52,13 @@ export class ReservationController {
       );
     }
     throw new BadRequestException('Provide either businessId or userId');
+  }
+
+  @Get('latest/:businessId')
+  async getLastReservationByBusinessId(
+    @Param('businessId') businessId: string,
+  ): Promise<Reservation> {
+    return this.reservationService.getLastReservationByBusinessId(businessId);
   }
 
   @Post()
