@@ -71,9 +71,12 @@ export class Business {
   @OneToMany(() => Availability, (availability) => availability.business, {
     cascade: true,
     eager: true,
+    onDelete: 'CASCADE',
   })
   availability: Availability[];
 
-  @OneToMany(() => Reservation, (reservation) => reservation.business)
+  @OneToMany(() => Reservation, (reservation) => reservation.business, {
+    onDelete: 'CASCADE',
+  })
   reservations: Reservation[];
 }

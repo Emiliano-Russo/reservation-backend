@@ -13,8 +13,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { BusinessService } from './business.service';
-import { BusinessCreateDto } from './entities/business-create.dto';
-import { BusinessUpdateDto } from './entities/business-update.dto';
+import { BusinessCreateDto } from './entities/dto/business-create.dto';
+import { BusinessUpdateDto } from './entities/dto/business-update.dto';
 import {
   FileFieldsInterceptor,
   FileInterceptor,
@@ -38,6 +38,8 @@ export class BusinessController {
     @Body() createBusinessDto: BusinessCreateDto,
     @UploadedFiles() files: { logo?: any; banner?: any },
   ) {
+    console.log('createBusiness: ', createBusinessDto);
+    console.log('files: ', files);
     return this.businessService.createBusiness(
       createBusinessDto,
       files.logo ? files.logo[0] : undefined,
