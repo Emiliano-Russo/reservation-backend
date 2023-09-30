@@ -47,6 +47,9 @@ export class User {
   loyaltyPoints: number;
 
   @Column({ nullable: true })
+  fcmToken: string;
+
+  @Column({ nullable: true })
   profileImage: string;
 
   @Column({ default: false })

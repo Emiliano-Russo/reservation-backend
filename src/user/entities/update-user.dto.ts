@@ -7,4 +7,5 @@ export class UpdateUserDto {
   profileImage?: string;
   country?: string;
   department?: string;
+  fcmToken?: string;
 }
