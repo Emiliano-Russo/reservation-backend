@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Business, BusinessStatus } from './entities/business.entity';
-import { BusinessCreateDto } from './entities/dto/business-create.dto';
+import { BusinessCreateDto, ShiftDto } from './entities/dto/business-create.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { BusinessUpdateDto } from './entities/dto/business-update.dto';
 import { User } from 'src/user/entities/user.entity';
@@ -26,9 +26,8 @@ export class BusinessService {
     private readonly availabilityRepository: Repository<Availability>,
     @InjectRepository(Map)
     private readonly mapRepository: Repository<Map>,
-
-    @InjectRepository(Shift)
-    private readonly shiftRepository: Repository<Shift>,
+    @InjectRepository(ShiftDto)
+    private readonly shiftRepository: Repository<ShiftDto>,
   ) { }
 
   async getBusiness(
