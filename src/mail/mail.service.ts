@@ -1,13 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
+import { UserService } from 'src/user/user.service';
+import { Repository } from 'typeorm/repository/Repository';
+import { User } from 'src/user/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class MailService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async sendConfirmationEmail(email: string) {
     const token = this.generateEmailConfirmationToken(email);
@@ -18,19 +22,6 @@ export class MailService {
       subject: 'Confirma tu correo',
       text: `Por favor, confirma tu correo haciendo clic en el siguiente enlace: ${url}`,
     });
-  }
-
-  confirmEmail(token: string) {
-    try {
-      const payload = this.jwtService.verify(token);
-      if (payload.type !== 'email-confirmation') {
-        throw new Error('Token inválido');
-      }
-
-      return { email: payload.email, message: 'Token válido' };
-    } catch (error) {
-      throw new Error('Token inválido o expirado');
-    }
   }
 
   private generateEmailConfirmationToken(email: string): string {

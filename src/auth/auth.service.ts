@@ -15,7 +15,11 @@ export class AuthService {
     @Inject(forwardRef(() => UserService))
     private userService: UserService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
+
+  async verifyToken(token: string): Promise<any> {
+    return this.jwtService.verify(token);
+  }
 
   async validateUser(email: string, password: string): Promise<any> {
     console.log('validating user...');

@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -27,9 +28,16 @@ export class UserController {
     return this.getUsers();
   }
 
-  @Patch(':userId')
-  async approveUser(@Param('userId') id: String) {
-    return this.approveUser(id);
+  @Patch('approve-user')
+  async approveUser(@Query('email') email: string) {
+    console.log(email);
+    return this.userService.approveUser(email);
+  }
+
+  @Post('confirm-email')
+  async confirmEmail(@Query('token') token: string) {
+    console.log(token);
+    return this.userService.confirmEmail(token);
   }
 
   @Post()

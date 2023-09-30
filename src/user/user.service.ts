@@ -9,6 +9,7 @@ import { MailService } from 'src/mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './entities/update-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
@@ -28,8 +29,11 @@ export class UserService {
     return user;
   }
 
-  async approveUser(id: string) {
-    const user: User = await this.getUser(id);
+  async approveUser(email: string) {
+    const user = await this.userRepository.findOne({ where: { email: email } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     const updateUser = {
       emailVerified: true
     }
@@ -38,9 +42,24 @@ export class UserService {
       throw new Error('Email is verified');
     }
 
+    console.log(updateUser.emailVerified);
+
     Object.assign(user, updateUser);
 
     return await this.userRepository.save(user);
+  }
+
+  async confirmEmail(token: string) {
+    try {
+      const payload = await this.authService.verifyToken(token);
+      if (payload.type !== 'email-confirmation') {
+        throw new Error('Token inválido');
+      }
+      await this.approveUser(payload.email);
+      return { email: payload.email, message: 'Token válido' };
+    } catch (error) {
+      throw new Error('Token inválido o expirado');
+    }
   }
 
   async getUser(id: string) {
@@ -79,7 +98,7 @@ export class UserService {
     const createdUser = await this.userRepository.save(user);
 
     // deshabilitado de momento, NO BORRAR!
-    // await this.mailService.sendConfirmationEmail(user.email);
+    await this.mailService.sendConfirmationEmail(user.email);
 
     const token = await this.authService.login(createdUser);
 
