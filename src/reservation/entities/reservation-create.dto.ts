@@ -15,6 +15,10 @@ export class ReservationCreateDto {
   userId: string;
 
   @IsString()
+  @IsOptional()
+  bookingInstructions: string;
+
+  @IsString()
   @IsNotEmpty()
   businessId: string;
 

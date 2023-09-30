@@ -10,7 +10,7 @@ import {
   PaginationDto,
 } from 'src/interfaces/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { IsNull, Like, Not, Repository } from 'typeorm';
 import { BusinessService } from 'src/business/business.service';
 import { UserService } from 'src/user/user.service';
 import { AcceptStatus, Negotiable } from './entities/negotiable.entity';
@@ -106,6 +106,27 @@ export class ReservationService {
     );
   }
 
+  async getLastReservationByBusinessId(
+    businessId: string,
+  ): Promise<Reservation> {
+    const reservation = await this.reservationRepository.findOne({
+      where: {
+        business: { id: businessId },
+        rating: Not(IsNull()), // Asegura que el rating no sea null
+      },
+      order: { createdAt: 'DESC' }, // Ordena por fecha de creación en orden descendente
+      relations: ['user', 'business', 'negotiable'],
+    });
+
+    if (!reservation) {
+      throw new NotFoundException(
+        `No reservations with reviews found for business with ID ${businessId}`,
+      );
+    }
+
+    return reservation;
+  }
+
   private async getReservationsWithFilters(
     filter: { userId?: string; businessId?: string },
     paginationDto: PaginationDto,
@@ -115,11 +136,14 @@ export class ReservationService {
     status?: ReservationStatus,
   ): Promise<PaginatedResponse> {
     const { limit, page } = paginationDto;
-    console.log('startDate: ', startDate);
-    console.log('endDate: ', endDate);
 
     const queryBuilder =
       this.reservationRepository.createQueryBuilder('reservation');
+
+    // JOIN con Negotiable
+    queryBuilder.leftJoinAndSelect('reservation.negotiable', 'negotiable');
+    queryBuilder.leftJoinAndSelect('negotiable.dateRange', 'dateRange');
+    queryBuilder.leftJoinAndSelect('negotiable.timeRange', 'timeRange');
 
     if (filter.userId) {
       queryBuilder.leftJoinAndSelect('reservation.business', 'business');
@@ -193,10 +217,12 @@ export class ReservationService {
         ? new Date(createReservationDto.date)
         : undefined,
       negotiable: createReservationDto.negotiable,
+      bookingInstructions: createReservationDto.bookingInstructions,
       status: ReservationStatus.Pending,
       createdAt: new Date(),
     });
 
+    this.userService.addLoyaltyPoints(user.id, 10);
     return await this.reservationRepository.save(reservation);
   }
 
@@ -231,7 +257,7 @@ export class ReservationService {
   ): Promise<Reservation> {
     const reservation = await this.reservationRepository.findOne({
       where: { id },
-      relations: ['business'],
+      relations: ['business', 'user'],
     });
 
     console.log('reservation: ', reservation);
@@ -261,6 +287,8 @@ export class ReservationService {
     }
 
     console.log('final reservation... ', reservation);
+
+    this.userService.addLoyaltyPoints(reservation.user.id, 5);
 
     return await this.reservationRepository.save(reservation);
   }

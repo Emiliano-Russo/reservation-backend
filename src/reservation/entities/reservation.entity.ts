@@ -39,6 +39,9 @@ export class Reservation {
   reservationDate: Date | null;
 
   @Column({ nullable: true })
+  bookingInstructions: string;
+
+  @Column({ nullable: true })
   rating: number;
 
   @Column({ nullable: true })

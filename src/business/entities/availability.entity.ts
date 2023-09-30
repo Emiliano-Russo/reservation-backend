@@ -6,7 +6,6 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { Business } from './business.entity';
-import { Shift } from './shift.entity';
 
 export enum WeekDays {
   Sunday = 'Sunday',
@@ -29,14 +28,11 @@ export class Availability {
   })
   day: WeekDays;
 
-  @OneToMany(() => Shift, (shift) => shift.availability, {
-    cascade: true,
-    eager: true,
-  })
-  shifts: Shift[];
+  @Column()
+  openingTime: string;
 
   @Column()
-  open: boolean;
+  closingTime: string;
 
   @ManyToOne(() => Business, (business) => business.availability)
   business: Business;

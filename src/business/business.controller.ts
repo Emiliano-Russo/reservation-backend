@@ -13,14 +13,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { BusinessService } from './business.service';
-import { BusinessCreateDto } from './entities/business-create.dto';
-import { BusinessUpdateDto } from './entities/business-update.dto';
+import { BusinessCreateDto } from './entities/dto/business-create.dto';
+import { BusinessUpdateDto } from './entities/dto/business-update.dto';
 import {
   FileFieldsInterceptor,
   FileInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
+import { LocationDto } from './entities/location.entity';
 
 @Controller('business')
 export class BusinessController {
@@ -37,6 +38,8 @@ export class BusinessController {
     @Body() createBusinessDto: BusinessCreateDto,
     @UploadedFiles() files: { logo?: any; banner?: any },
   ) {
+    console.log('createBusiness: ', createBusinessDto);
+    console.log('files: ', files);
     return this.businessService.createBusiness(
       createBusinessDto,
       files.logo ? files.logo[0] : undefined,
@@ -51,6 +54,7 @@ export class BusinessController {
     @Query('ownerId') ownerId?: string,
     @Query('typeId') typeId?: string,
     @Query('search') search: string = '',
+    @Query() locationDto?: LocationDto,
   ) {
     if (businessId) {
       return this.businessService.getBusinessById(businessId);
@@ -61,6 +65,7 @@ export class BusinessController {
         typeId,
         paginationDto,
         search,
+        locationDto,
       );
     } else if (paginationDto) {
       return this.businessService.getBusiness(paginationDto);

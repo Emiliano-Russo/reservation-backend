@@ -8,9 +8,9 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { BusinessStatus } from './business.entity';
+import { BusinessStatus } from '../business.entity';
 import { Type } from 'class-transformer';
-import { WeekDays } from './availability.entity';
+import { WeekDays } from '../availability.entity';
 
 class CoordinatesDto {
   @IsString()
@@ -72,19 +72,6 @@ export class BusinessCreateDto {
   @IsNotEmpty()
   address: string;
 
-  @IsObject()
-  @ValidateNested()
-  @Type(() => CoordinatesDto) // Esto es necesario para que class-transformer instancie correctamente el objeto nested
-  coordinates: CoordinatesDto;
-
-  @IsString()
-  @IsOptional()
-  logoURL: string;
-
-  @IsArray()
-  @IsOptional()
-  multimediaURL: string[];
-
   @IsString()
   @IsOptional()
   description: string;
@@ -93,8 +80,12 @@ export class BusinessCreateDto {
   @IsEnum(BusinessStatus)
   status: BusinessStatus;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => AvailabilityDto)
-  availability: AvailabilityDto[];
+  //stringify properties
+  @IsString()
+  @IsNotEmpty()
+  coordinatesStringify: string;
+
+  @IsNotEmpty()
+  @IsString()
+  availabilityStringify: string;
 }

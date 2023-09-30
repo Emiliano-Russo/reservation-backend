@@ -43,6 +43,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column()
+  loyaltyPoints: number;
+
   @Column({ nullable: true })
   profileImage: string;
 
