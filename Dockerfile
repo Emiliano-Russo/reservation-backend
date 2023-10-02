@@ -11,6 +11,8 @@ RUN npm rebuild bcrypt --build-from-source
 
 COPY . .
 
+EXPOSE 3306
+
 CMD ["npm", "run", "start:prod"]
 
 
