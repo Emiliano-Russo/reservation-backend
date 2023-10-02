@@ -13,13 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Zip the code
+        run: zip -r deployment.zip .
+
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v14
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: reservation
-          environment_name: nombre-de-tu-entorno
+          application_name: backend-reservation
+          environment_name: Backend-reservation-env
           version_label: ${{ github.run_id }}
           region: us-east-1 # o tu región de AWS
           deployment_package: deployment.zip
