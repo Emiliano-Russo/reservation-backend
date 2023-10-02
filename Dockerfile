@@ -9,7 +9,7 @@ RUN npm install
 # Reconstruir bcrypt dentro del contenedor
 RUN npm rebuild bcrypt --build-from-source
 
-COPY . .
+COPY --from=0
 
 EXPOSE 3000
 
