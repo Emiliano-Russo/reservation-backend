@@ -24,4 +24,4 @@ jobs:
           region: us-east-1 # o tu región de AWS
           # zip_file: archivo.zip # si estás subiendo un archivo zip
           # o
-          deployment_package: .
+           deployment_package: deployment.zip
