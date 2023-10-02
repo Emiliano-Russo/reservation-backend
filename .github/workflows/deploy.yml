@@ -22,6 +22,4 @@ jobs:
           environment_name: nombre-de-tu-entorno
           version_label: ${{ github.run_id }}
           region: us-east-1 # o tu región de AWS
-          # zip_file: archivo.zip # si estás subiendo un archivo zip
-          # o
-           deployment_package: deployment.zip
+          deployment_package: deployment.zip
