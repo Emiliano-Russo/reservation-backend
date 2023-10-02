@@ -22,7 +22,7 @@ FROM nginx:latest
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html
 
 # Expose port 80 (the default port for Nginx)
-EXPOSE 80
+EXPOSE 3000
 
 # Start Nginx when the container starts
 CMD ["nginx", "-g", "daemon off;"]
