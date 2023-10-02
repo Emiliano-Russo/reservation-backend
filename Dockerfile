@@ -11,6 +11,9 @@ RUN npm rebuild bcrypt --build-from-source
 
 COPY . .
 
+# Construir la aplicación
+RUN npm run build
+
 EXPOSE 80
 
 CMD ["npm","run","start:prod"]
