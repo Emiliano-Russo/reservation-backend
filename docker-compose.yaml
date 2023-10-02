@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '3000:3000'
+      - '80:80'
     environment:
       S3_BUCKET_NAME: jiren-bucket
       AWS_ACCESS_KEY_ID: AKIA3JBG5QLHQH3U2UUN
