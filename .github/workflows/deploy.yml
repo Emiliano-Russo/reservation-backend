@@ -1,27 +1,42 @@
-name: Deploy to Elastic Beanstalk
+name: Desplegar en Elastic Beanstalk
 
 on:
   push:
     branches:
-      - main # o el nombre de tu rama principal
+      - main
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t altoemilius/reservation-backend:latest .
+          docker push altoemilius/reservation-backend:latest
+
+      # Si necesitas crear un paquete de despliegue (deployment.zip), hazlo aquí.
+      # Por ejemplo, si estás zipeando tu código y el Dockerrun.aws.json:
+      - name: Create deployment package
+        run: |
+          zip deployment.zip Dockerrun.aws.json
+
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v14
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: reservation
-          environment_name: nombre-de-tu-entorno
+          application_name: dockerrun-backend-docker
+          environment_name: Dockerrun-backend-docker-env
           version_label: ${{ github.run_id }}
           region: us-east-1 # o tu región de AWS
-          zip_file: archivo.zip # si estás subiendo un archivo zip
-          # o
-          # deployment_package: path/to/your/deployment.zip
+          deployment_package: deployment.zip

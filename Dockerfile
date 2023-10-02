@@ -6,10 +6,14 @@ COPY package*.json ./
 
 RUN npm install
 
-# Reconstruir bcrypt dentro del contenedor
+# Reconstruir bycrypt dentro del contenedor
 RUN npm rebuild bcrypt --build-from-source
 
 COPY . .
 
-CMD ["npm", "run", "start:prod"]
+# Construir la aplicación
+RUN npm run build
 
+EXPOSE 80
+
+CMD ["npm","run","start:prod"]

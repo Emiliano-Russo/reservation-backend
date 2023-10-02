@@ -9,13 +9,13 @@ async function bootstrap() {
   process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
   // Habilitar CORS
-  //en produccion  origin: ['http://miapp.com', 'http://otrodominio.com']
+  //en produccion  origin: ['http://miapp.com', 'http://otrodominio.com'].a
   app.enableCors({
     origin: '*', // Permitir todos los orígenes (no recomendado para producción)
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
   });
 
-  await app.listen(3000);
+  await app.listen(80);
 }
 bootstrap();
