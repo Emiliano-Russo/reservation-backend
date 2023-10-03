@@ -5,10 +5,11 @@ import { User } from './entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { S3Service } from 'src/shared/s3.service';
 import { AuthService } from 'src/auth/auth.service';
-import { MailService } from 'src/mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './entities/update-user.dto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
@@ -17,7 +18,8 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     private s3Service: S3Service,
     private authService: AuthService,
-    private mailService: MailService,
+    private readonly mailerService: MailerService,
+    private jwtService: JwtService,
   ) {}
 
   async getUser(id: string) {
@@ -55,8 +57,8 @@ export class UserService {
 
     const createdUser = await this.userRepository.save(user);
 
-    // deshabilitado de momento, NO BORRAR!
-    // await this.mailService.sendConfirmationEmail(user.email);
+    //deshabilitado de momento, NO BORRAR!
+    await this.sendConfirmationEmail(user.email);
 
     const token = await this.authService.login(createdUser);
 
@@ -102,5 +104,49 @@ export class UserService {
 
     // Guardar el usuario actualizado en la base de datos
     return this.userRepository.save(user);
+  }
+
+  async verifyEmail(email: string): Promise<User> {
+    // Buscar al usuario por su ID
+    const user = await this.findOneByEmail(email);
+
+    // Establecer emailVerified en true
+    user.emailVerified = true;
+
+    // Guardar el usuario actualizado en la base de datos
+    return this.userRepository.save(user);
+  }
+
+  async sendConfirmationEmail(email: string) {
+    console.log('email: ', email);
+    const token = this.generateEmailConfirmationToken(email);
+    const url = `${process.env.HOST_FRONTEND}/confirm-email?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Confirma tu correo',
+      text: `Por favor, confirma tu correo haciendo clic en el siguiente enlace: ${url}`,
+    });
+  }
+
+  confirmEmail(token: string) {
+    try {
+      const payload = this.jwtService.verify(token);
+      if (payload.type !== 'email-confirmation') {
+        throw new Error('Token inválido');
+      }
+
+      console.log('payload: ', payload);
+      this.verifyEmail(payload.email);
+
+      return { email: payload.email, message: 'Token válido' };
+    } catch (error) {
+      throw new Error('Token inválido o expirado');
+    }
+  }
+
+  private generateEmailConfirmationToken(email: string): string {
+    const payload = { email, type: 'email-confirmation' };
+    return this.jwtService.sign(payload);
   }
 }
