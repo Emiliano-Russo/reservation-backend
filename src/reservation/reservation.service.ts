@@ -206,15 +206,29 @@ export class ReservationService {
       throw new NotFoundException(`Reservation with ID ${id} not found`);
     }
 
+    if (updateDto.status) {
+      if (updateDto.status == ReservationStatus.Cancelled) {
+        const userOwner = await this.userService.getUser(
+          reservation.business.ownerId,
+        );
+        await this.sendStatusChangeNotification(
+          reservation.status,
+          updateDto.status,
+          userOwner.fcmToken,
+        );
+      } else {
+        await this.sendStatusChangeNotification(
+          reservation.status,
+          updateDto.status,
+          reservation.user.fcmToken,
+        );
+      }
+    }
+
     if (
       updateDto.status !== undefined &&
       updateDto.status === ReservationStatus.Rejected
     ) {
-      this.firebaseService.sendNotification(
-        reservation.user.fcmToken,
-        'Rechazada',
-        'Tu reserva ha sido rechazada por el negocio',
-      );
       reservation.negotiable = null; // o `delete reservation.negotiable;` si realmente quieres eliminar la propiedad
     }
 
@@ -302,6 +316,11 @@ export class ReservationService {
     // reservation.negotiable.timeRange = { ...reservation.negotiable.timeRange }; // Esto asume que `timeRange` es un objeto
     reservation.negotiable.businessProposedSchedule = date;
     reservation.negotiable.acceptedBusinessProposed = AcceptStatus.Unanswered;
+    this.firebaseService.sendNotification(
+      reservation.user.fcmToken,
+      '¡Nueva Propuesta de Fecha!',
+      'El negocio ha propuesto una nueva fecha para tu reserva. ¡Revisa y confirma!',
+    );
 
     return await this.reservationRepository.save(reservation);
   }
@@ -332,8 +351,15 @@ export class ReservationService {
     ) {
       throw new BadRequestException('Invalid Data');
     }
-
+    const userOwner = await this.userService.getUser(
+      reservation.business.ownerId,
+    );
     if (value === AcceptStatus.Accepted) {
+      this.firebaseService.sendNotification(
+        userOwner.id,
+        'Propuesta Aceptada',
+        `Tu propuesta de fecha ha sido aceptada por ${reservation.user.name}`,
+      );
       reservation.reservationDate = new Date(
         reservation.negotiable.businessProposedSchedule,
       );
@@ -349,10 +375,54 @@ export class ReservationService {
       // Elimina el registro negotiable de la base de datos
       await this.negotiableRepository.delete(negotiableId);
     } else if (value === AcceptStatus.NotAccepted) {
+      this.firebaseService.sendNotification(
+        userOwner.id,
+        'Propuesta Rechazada',
+        `${reservation.user.name} no ha aceptado la fecha propuesta. Considera proponer una nueva fecha.`,
+      );
       // Si deseas hacer alguna actualización específica cuando no es aceptado, hazlo aquí.
       reservation.negotiable.acceptedBusinessProposed =
         AcceptStatus.NotAccepted;
       return await this.reservationRepository.save(reservation);
     }
+  }
+
+  private async sendStatusChangeNotification(
+    previousStatus: ReservationStatus,
+    newStatus: ReservationStatus,
+    userToken: string,
+  ) {
+    if (previousStatus === newStatus) {
+      return; // No hay cambio de estado, no hacer nada
+    }
+
+    let title = 'Estado de Reserva Actualizado';
+    let message = `El estado de tu reserva ha sido actualizado a ${newStatus}.`;
+
+    switch (newStatus) {
+      case ReservationStatus.Rejected:
+        title = 'Reserva Rechazada';
+        message =
+          'Lamentamos informarte que tu reserva ha sido rechazada por el negocio.';
+        break;
+      case ReservationStatus.Confirmed:
+        title = 'Reserva Confirmada';
+        message = '¡Buenas noticias! Tu reserva ha sido confirmada.';
+        break;
+      case ReservationStatus.Realized:
+        title = 'Reserva Realizada';
+        message = 'Tu reserva ha sido realizada con éxito.';
+        break;
+      case ReservationStatus.Cancelled:
+        title = 'Reserva Cancelada';
+        message = 'La reserva ha sido cancelada.';
+        break;
+      case ReservationStatus.NotAttended:
+        title = 'No Asististe';
+        message = 'No asististe a tu reserva.';
+        break;
+    }
+
+    await this.firebaseService.sendNotification(userToken, title, message);
   }
 }
