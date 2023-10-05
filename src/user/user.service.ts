@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { UpdateUserDto } from './entities/update-user.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class UserService {
@@ -143,6 +144,12 @@ export class UserService {
     } catch (error) {
       throw new Error('Token inválido o expirado');
     }
+  }
+
+  async updateFcmToken(id: string, fcmToken: string): Promise<User> {
+    const user = await this.getUser(id);
+    user.fcmToken = fcmToken;
+    return this.userRepository.save(user);
   }
 
   private generateEmailConfirmationToken(email: string): string {

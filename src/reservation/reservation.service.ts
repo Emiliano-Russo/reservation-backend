@@ -14,6 +14,7 @@ import { IsNull, Like, Not, Repository } from 'typeorm';
 import { BusinessService } from 'src/business/business.service';
 import { UserService } from 'src/user/user.service';
 import { AcceptStatus, Negotiable } from './entities/negotiable.entity';
+import { FirebaseService } from 'src/shared/firebase.service';
 
 @Injectable()
 export class ReservationService {
@@ -24,6 +25,7 @@ export class ReservationService {
     private readonly negotiableRepository: Repository<Negotiable>,
     private readonly businessService: BusinessService,
     private readonly userService: UserService,
+    private readonly firebaseService: FirebaseService,
   ) {}
 
   async getReservation(id: string): Promise<Reservation | null> {
@@ -208,6 +210,11 @@ export class ReservationService {
       updateDto.status !== undefined &&
       updateDto.status === ReservationStatus.Rejected
     ) {
+      this.firebaseService.sendNotification(
+        reservation.user.fcmToken,
+        'Rechazada',
+        'Tu reserva ha sido rechazada por el negocio',
+      );
       reservation.negotiable = null; // o `delete reservation.negotiable;` si realmente quieres eliminar la propiedad
     }
 

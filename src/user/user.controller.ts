@@ -44,4 +44,12 @@ export class UserController {
   ) {
     return this.userService.updateUser(userId, updateUserDto, profileImage);
   }
+
+  @Patch(':userId/fcmToken')
+  async updateFcmToken(
+    @Param('userId') userId: string,
+    @Body('fcmToken') fcmToken: string,
+  ) {
+    return this.userService.updateFcmToken(userId, fcmToken);
+  }
 }
