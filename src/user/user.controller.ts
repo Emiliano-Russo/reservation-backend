@@ -52,4 +52,22 @@ export class UserController {
   ) {
     return this.userService.updateFcmToken(userId, fcmToken);
   }
+
+  @Post('request-password-reset')
+  async requestPasswordReset(@Body('email') email: string) {
+    return this.userService.sendPasswordResetEmail(email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.userService.resetPassword(token, newPassword);
+  }
+
+  @Post('verify-reset-token')
+  async verifyResetToken(@Body('token') token: string) {
+    return this.userService.verifyResetToken(token);
+  }
 }

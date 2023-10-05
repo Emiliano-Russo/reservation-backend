@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './entities/user.dto';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
@@ -146,6 +150,20 @@ export class UserService {
     }
   }
 
+  async sendPasswordResetEmail(email: string) {
+    const user = await this.findOneByEmail(email);
+    if (user == null) throw new BadRequestException('Email no encontrado');
+
+    const token = this.generatePasswordResetToken(email);
+    const url = `${process.env.HOST_FRONTEND}/reset-password?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Restablece tu contraseña',
+      text: `Por favor, restablece tu contraseña haciendo clic en el siguiente enlace: ${url}`,
+    });
+  }
+
   async updateFcmToken(id: string, fcmToken: string): Promise<User> {
     const user = await this.getUser(id);
     user.fcmToken = fcmToken;
@@ -155,5 +173,56 @@ export class UserService {
   private generateEmailConfirmationToken(email: string): string {
     const payload = { email, type: 'email-confirmation' };
     return this.jwtService.sign(payload);
+  }
+
+  private generatePasswordResetToken(email: string): string {
+    const payload = {
+      email,
+      type: 'password-reset',
+    };
+    return this.jwtService.sign(payload);
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    try {
+      const payload = this.jwtService.verify(token);
+      if (payload.type !== 'password-reset') {
+        throw new Error('Token inválido');
+      }
+
+      const email = payload.email;
+      const user = await this.findOneByEmail(email);
+      if (!user) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Asegúrate de hashear la contraseña antes de guardarla
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await this.userRepository.save(user);
+
+      return { message: 'Contraseña restablecida con éxito' };
+    } catch (error) {
+      if (error.message === 'Token inválido') {
+        throw new Error('Token inválido o expirado');
+      }
+      throw error;
+    }
+  }
+
+  async verifyResetToken(token: string): Promise<{ isValid: boolean }> {
+    try {
+      const payload = this.jwtService.verify(token);
+      if (payload.type !== 'password-reset') {
+        throw new BadRequestException('Token inválido');
+      }
+      // Aquí puedes agregar más lógica si es necesario, como verificar si el token ha expirado en tu base de datos
+      return { isValid: true };
+    } catch (error) {
+      throw new BadRequestException('Token inválido o expirado');
+    }
   }
 }
