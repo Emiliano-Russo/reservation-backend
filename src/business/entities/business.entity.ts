@@ -8,7 +8,6 @@ import {
   OneToOne,
 } from 'typeorm';
 import { Availability } from './availability.entity';
-import { Map } from './map.entity';
 import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 export enum BusinessStatus {
@@ -40,9 +39,9 @@ export class Business {
   @Column()
   address: string;
 
-  @OneToOne(() => Map, (map) => map.business, { cascade: true })
-  @JoinColumn()
-  coordinates: Map;
+  // @OneToOne(() => Map, (map) => map.business, { cascade: true })
+  // @JoinColumn()
+  // coordinates: Map;
 
   @Column({ nullable: true })
   logoURL: string;
