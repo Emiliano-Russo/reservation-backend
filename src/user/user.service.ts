@@ -130,7 +130,7 @@ export class UserService {
     await this.mailerService.sendMail({
       to: email,
       subject: 'Confirma tu correo',
-      text: `Por favor, confirma tu correo haciendo clic en el siguiente enlace: ${url}`,
+      html: `Por favor, confirma tu correo haciendo clic en el siguiente enlace: <a href="${url}">click aquí</a>`,
     });
   }
 
