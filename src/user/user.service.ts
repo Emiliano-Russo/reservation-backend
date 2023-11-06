@@ -15,6 +15,7 @@ import { UpdateUserDto } from './entities/update-user.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import * as admin from 'firebase-admin';
+import { ReservationService } from 'src/reservation/reservation.service';
 
 @Injectable()
 export class UserService {
@@ -224,5 +225,16 @@ export class UserService {
     } catch (error) {
       throw new BadRequestException('Token inválido o expirado');
     }
+  }
+
+  async deleteUser(id: string) {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Ahora, después de eliminar todas las referencias, elimina el usuario
+    await this.userRepository.remove(user);
+    return { message: 'User deleted successfully' };
   }
 }

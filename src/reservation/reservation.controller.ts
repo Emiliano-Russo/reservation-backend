@@ -95,6 +95,11 @@ export class ReservationController {
     return this.reservationService.rateReservation(id, ratingDto);
   }
 
+  @Delete('user/:userId')
+  async delete(@Param('userId') userId: string) {
+    return this.reservationService.deleteUser(userId);
+  }
+
   @Delete(':id')
   async removeReservation(@Param('id') id: string) {
     return this.reservationService.removeReservation(id);
