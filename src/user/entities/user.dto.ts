@@ -20,12 +20,6 @@ export class CreateUserDto {
   department: string;
 
   @IsNotEmpty()
-  phone: string; // Añadido
-
-  @IsNotEmpty()
-  civilIdDoc: string; // Añadido
-
-  @IsNotEmpty()
   password: string;
 
   profileImage?: string;

@@ -29,16 +29,10 @@ export class User {
   email: string;
 
   @Column()
-  phone: string;
-
-  @Column()
   country: string;
 
   @Column()
   department: string;
-
-  @Column()
-  civilIdDoc: string;
 
   @Column()
   password: string;
