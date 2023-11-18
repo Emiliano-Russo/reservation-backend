@@ -39,10 +39,6 @@ export class Business {
   @Column()
   address: string;
 
-  // @OneToOne(() => Map, (map) => map.business, { cascade: true })
-  // @JoinColumn()
-  // coordinates: Map;
-
   @Column({ nullable: true })
   logoURL: string;
 

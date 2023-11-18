@@ -6,9 +6,13 @@ import { SharedModule } from 'src/shared/shared.module';
 import { Business } from './entities/business.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Availability } from './entities/availability.entity';
+import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 @Module({
-  imports: [SharedModule, TypeOrmModule.forFeature([Business, Availability])],
+  imports: [
+    SharedModule,
+    TypeOrmModule.forFeature([Business, Availability, Reservation]),
+  ],
   controllers: [BusinessController],
   providers: [BusinessService],
   exports: [BusinessService],

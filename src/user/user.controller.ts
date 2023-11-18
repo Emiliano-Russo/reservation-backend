@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -13,10 +14,26 @@ import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './entities/user.dto';
 import { UpdateUserDto } from './entities/update-user.dto';
+import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('count')
+  async getUsersCount() {
+    return this.userService.getUsersCountByCountryAndDepartment();
+  }
+
+  @Get('search')
+  async searchUsers(
+    @Query('country') country: string,
+    @Query('searchTerm') searchTerm: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    console.log('data: ', country, searchTerm, paginationDto);
+    return this.userService.searchUsers(country, searchTerm, paginationDto);
+  }
 
   @Get(':userId')
   async get(@Param('userId') userId: string) {

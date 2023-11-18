@@ -16,6 +16,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import * as admin from 'firebase-admin';
 import { ReservationService } from 'src/reservation/reservation.service';
+import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Injectable()
 export class UserService {
@@ -236,5 +237,52 @@ export class UserService {
     // Ahora, después de eliminar todas las referencias, elimina el usuario
     await this.userRepository.remove(user);
     return { message: 'User deleted successfully' };
+  }
+
+  async searchUsers(
+    country: string,
+    searchTerm: string,
+    paginationDto: PaginationDto,
+  ) {
+    const { limit, page } = paginationDto;
+
+    const query = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.country = :country', { country });
+
+    if (searchTerm) {
+      query.andWhere(
+        'user.name LIKE :searchTerm OR user.email LIKE :searchTerm',
+        { searchTerm: `%${searchTerm}%` },
+      );
+    }
+
+    const users = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return {
+      items: users,
+      total,
+      page,
+      limit,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
+
+  async getUsersCountByCountryAndDepartment(): Promise<any> {
+    const result = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.country', 'country')
+      .addSelect('user.department', 'department')
+      .addSelect('COUNT(user.id)', 'userCount')
+      .groupBy('user.country')
+      .addGroupBy('user.department')
+      .getRawMany();
+
+    return result;
   }
 }
