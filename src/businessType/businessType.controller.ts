@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard, JwtPublicAuthGuard } from 'src/auth/jwt-auth.guard';
 import { BusinessTypeService } from './businessType.service';
 import { BusinessTypeCreateDto } from './entities/businessType-create.dto';
 import { BusinessTypeUpdateDto } from './entities/businessType-update.dto';
@@ -17,9 +17,9 @@ import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Controller('businessType')
 export class BusinessTypeController {
-  constructor(private readonly businessTypeService: BusinessTypeService) {}
+  constructor(private readonly businessTypeService: BusinessTypeService) { }
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtPublicAuthGuard)
   @Get()
   async getBusinessTypesOrType(
     @Query() paginationDto: PaginationDto,
@@ -31,6 +31,7 @@ export class BusinessTypeController {
     return this.businessTypeService.getBusinessTypes(paginationDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createBusinessType(
     @Body() createBusinessTypeDto: BusinessTypeCreateDto,
@@ -38,6 +39,7 @@ export class BusinessTypeController {
     return this.businessTypeService.createBusinessType(createBusinessTypeDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async updateBusinessType(
     @Param('id') id: string,
@@ -49,6 +51,7 @@ export class BusinessTypeController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async removeBusinessType(@Param('id') id: string) {
     return this.businessTypeService.removeBusinessType(id);

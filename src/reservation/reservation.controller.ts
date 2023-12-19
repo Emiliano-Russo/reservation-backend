@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ReservationCreateDto } from './entities/reservation-create.dto';
@@ -17,18 +18,19 @@ import { RatingDto } from './entities/rating.dto';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
 import { AcceptStatus } from './entities/negotiable.entity';
 import { Reservation, ReservationStatus } from './entities/reservation.entity';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard, JwtPublicAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Request } from 'express';
 
 @Controller('reservation')
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) { }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtPublicAuthGuard)
   @Get()
   async getReservations(
     @Query() paginationDto: PaginationDto,
+    @Req() req: Request,
     @Query('businessId') businessId?: string,
-    @Query('userId') userId?: string,
     @Query('search') search: string = '',
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -44,9 +46,9 @@ export class ReservationController {
         status,
       );
     }
-    if (userId) {
+    else {
       return this.reservationService.getReservationsByUserId(
-        userId,
+        req.user.id,
         paginationDto,
         search,
         startDate,
