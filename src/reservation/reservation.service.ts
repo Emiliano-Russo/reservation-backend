@@ -24,7 +24,7 @@ export class ReservationService {
     private readonly negotiableRepository: Repository<Negotiable>,
     private readonly businessService: BusinessService,
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   async getReservation(id: string): Promise<Reservation | null> {
     const reservation = await this.reservationRepository.findOne({
@@ -209,8 +209,10 @@ export class ReservationService {
       updateDto.status === ReservationStatus.Rejected
     ) {
       reservation.negotiable = null; // o `delete reservation.negotiable;` si realmente quieres eliminar la propiedad
+      reservation.rejectionReason = updateDto.rejectionReason;
     }
 
+    console.log(updateDto);
     // Actualiza los campos de la reserva con los valores del DTO
     Object.assign(reservation, updateDto);
 

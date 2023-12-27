@@ -13,4 +13,8 @@ export class ReservationUpdateDto {
 
   @IsOptional()
   negotiable?: Negotiable;
+
+  @IsString()
+  @IsOptional()
+  rejectionReason?: string;
 }
