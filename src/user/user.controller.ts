@@ -19,7 +19,7 @@ import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Get(':userId')
   async get(@Param('userId') userId: string) {
@@ -40,12 +40,17 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch(':userId')
   @UseInterceptors(FileInterceptor('profileImage'))
   async update(
     @Req() req: Request,
     @UploadedFile() profileImage: any,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateUser(req.user.id, updateUserDto, profileImage);
+    return this.userService.updateUser(
+      req.user.id,
+      updateUserDto,
+      profileImage,
+    );
   }
 }
