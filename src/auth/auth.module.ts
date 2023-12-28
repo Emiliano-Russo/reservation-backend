@@ -15,11 +15,11 @@ import { MailController } from '../user/mail.controller';
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET, // en producción, utiliza una variable de entorno para el secreto
-      signOptions: { expiresIn: '500m' }, // los tokens expiran después de 1 hora
+      signOptions: { expiresIn: '60d' }, // los tokens expiran después de 1 hora
     }),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

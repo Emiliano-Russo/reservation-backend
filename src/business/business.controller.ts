@@ -10,6 +10,7 @@ import {
   Query,
   UploadedFile,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { BusinessService } from './business.service';
@@ -22,11 +23,13 @@ import {
 } from '@nestjs/platform-express';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
 import { LocationDto } from './entities/location.entity';
+import { JwtAuthGuard, JwtPublicAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) {}
+  constructor(private readonly businessService: BusinessService) { }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -47,6 +50,7 @@ export class BusinessController {
     );
   }
 
+  @UseGuards(JwtPublicAuthGuard)
   @Get()
   async getBusiness(
     @Query() paginationDto: PaginationDto,
@@ -72,6 +76,7 @@ export class BusinessController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -92,6 +97,7 @@ export class BusinessController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async removeBusiness(@Param('id') id: string) {
     return this.businessService.removeBusiness(id);

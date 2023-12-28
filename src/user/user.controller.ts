@@ -5,13 +5,17 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './entities/user.dto';
 import { UpdateUserDto } from './entities/update-user.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -35,13 +39,18 @@ export class UserController {
     return this.userService.createUser(createUserDto, profileImage);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':userId')
   @UseInterceptors(FileInterceptor('profileImage'))
   async update(
-    @Param('userId') userId: string,
+    @Req() req: Request,
     @UploadedFile() profileImage: any,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateUser(userId, updateUserDto, profileImage);
+    return this.userService.updateUser(
+      req.user.id,
+      updateUserDto,
+      profileImage,
+    );
   }
 }
