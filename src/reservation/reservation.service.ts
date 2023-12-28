@@ -212,7 +212,6 @@ export class ReservationService {
       reservation.rejectionReason = updateDto.rejectionReason;
     }
 
-    console.log(updateDto);
     // Actualiza los campos de la reserva con los valores del DTO
     Object.assign(reservation, updateDto);
 
