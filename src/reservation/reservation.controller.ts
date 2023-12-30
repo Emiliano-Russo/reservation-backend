@@ -23,19 +23,19 @@ import { Request } from 'express';
 
 @Controller('reservation')
 export class ReservationController {
-  constructor(private readonly reservationService: ReservationService) { }
+  constructor(private readonly reservationService: ReservationService) {}
 
-  @UseGuards(JwtPublicAuthGuard)
   @Get()
   async getReservations(
     @Query() paginationDto: PaginationDto,
-    @Req() req: Request,
+    @Query('userId') userId?: string,
     @Query('businessId') businessId?: string,
     @Query('search') search: string = '',
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('status') status?: ReservationStatus,
   ) {
+    console.log('userId: ', userId);
     if (businessId) {
       return this.reservationService.getReservationByBusinessId(
         businessId,
@@ -45,10 +45,9 @@ export class ReservationController {
         endDate,
         status,
       );
-    }
-    else {
+    } else {
       return this.reservationService.getReservationsByUserId(
-        req.user.id,
+        userId,
         paginationDto,
         search,
         startDate,
