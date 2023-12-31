@@ -13,8 +13,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { Availability } from './entities/availability.entity';
-import { Map } from './entities/map.entity';
 import { LocationDto } from './entities/location.entity';
+import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 @Injectable()
 export class BusinessService {
@@ -24,8 +24,8 @@ export class BusinessService {
     private readonly businessRepository: Repository<Business>,
     @InjectRepository(Availability)
     private readonly availabilityRepository: Repository<Availability>,
-    @InjectRepository(Map)
-    private readonly mapRepository: Repository<Map>,
+    @InjectRepository(Reservation)
+    private readonly reservationRepository: Repository<Reservation>,
   ) {}
 
   async getBusinessByOwnerId(
@@ -154,17 +154,10 @@ export class BusinessService {
     banner: any,
   ): Promise<any> {
     console.log('\x1b[36m%s\x1b[0m', '############################');
-    let coordinates: { id: string; pointX: string; pointY: string } =
-      JSON.parse(businessCreateDto.coordinatesStringify);
+    // let coordinates: { id: string; pointX: string; pointY: string } =
+    //   JSON.parse(businessCreateDto.coordinatesStringify);
     let availability: Availability[] = JSON.parse(
       businessCreateDto.availabilityStringify,
-    );
-
-    console.log(
-      'businessCreateDto ',
-      businessCreateDto,
-      coordinates,
-      availability,
     );
 
     let logoUrl =
@@ -192,9 +185,9 @@ export class BusinessService {
       bannerUrl = `https://${process.env.S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/business/${businessCreateDto.ownerId}/banner/${sanitizedBannerFilename}`;
     }
 
-    // Crear y guardar la entidad Map
-    coordinates.id = uuidv4();
-    const mapEntity = this.mapRepository.create(coordinates);
+    // // Crear y guardar la entidad Map
+    // coordinates.id = uuidv4();
+    // const mapEntity = this.mapRepository.create(coordinates);
 
     const availabilityEntities = availability.map((avail) => {
       avail.id = uuidv4();
@@ -217,7 +210,7 @@ export class BusinessService {
       totalRatingSum: 0,
       totalRatingsCount: 0,
       averageRating: 0,
-      coordinates: mapEntity,
+      // coordinates: mapEntity,
       availability: availabilityEntities,
     });
 
@@ -228,9 +221,17 @@ export class BusinessService {
     const business = await this.businessRepository.findOne({ where: { id } });
 
     if (!business) {
-      throw new Error('business not found');
+      throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
+    // Eliminar todas las referencias en Availability
+    await this.availabilityRepository.delete({ business: { id: id } });
+
+    // Eliminar todas las referencias en Reservations
+    // Asumiendo que tienes un repository para Reservations similar a availabilityRepository
+    await this.reservationRepository.delete({ business: { id: id } });
+
+    // Ahora que todas las referencias han sido eliminadas, puedes eliminar el negocio
     await this.businessRepository.remove(business);
   }
 }

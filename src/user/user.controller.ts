@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -14,12 +16,28 @@ import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './entities/user.dto';
 import { UpdateUserDto } from './entities/update-user.dto';
+import { PaginationDto } from 'src/interfaces/pagination.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('count')
+  async getUsersCount() {
+    return this.userService.getUsersCountByCountryAndDepartment();
+  }
+
+  @Get('search')
+  async searchUsers(
+    @Query('country') country: string,
+    @Query('searchTerm') searchTerm: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    console.log('data: ', country, searchTerm, paginationDto);
+    return this.userService.searchUsers(country, searchTerm, paginationDto);
+  }
 
   @Get(':userId')
   async get(@Param('userId') userId: string) {
@@ -52,5 +70,31 @@ export class UserController {
       updateUserDto,
       profileImage,
     );
+  }
+
+  @Patch(':userId/fcmToken')
+  async updateFcmToken(
+    @Param('userId') userId: string,
+    @Body('fcmToken') fcmToken: string,
+  ) {
+    return this.userService.updateFcmToken(userId, fcmToken);
+  }
+
+  @Post('request-password-reset')
+  async requestPasswordReset(@Body('email') email: string) {
+    return this.userService.sendPasswordResetEmail(email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.userService.resetPassword(token, newPassword);
+  }
+
+  @Post('verify-reset-token')
+  async verifyResetToken(@Body('token') token: string) {
+    return this.userService.verifyResetToken(token);
   }
 }

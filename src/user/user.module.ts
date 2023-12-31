@@ -23,7 +23,7 @@ import { MailController } from './mail.controller';
         },
       },
       defaults: {
-        from: `"Nombre de remitente" <${process.env.SENDGRID_EMAIL}>`,
+        from: `"Agenda Fácil" <${process.env.SENDGRID_EMAIL}>`,
       },
     }),
     JwtModule.register({

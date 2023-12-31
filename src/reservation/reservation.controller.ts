@@ -106,6 +106,11 @@ export class ReservationController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Delete('user/:userId')
+  async delete(@Param('userId') userId: string) {
+    return this.reservationService.deleteUser(userId);
+  }
+
   @Delete(':id')
   async removeReservation(@Param('id') id: string) {
     return this.reservationService.removeReservation(id);

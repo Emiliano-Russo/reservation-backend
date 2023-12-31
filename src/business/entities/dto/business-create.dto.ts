@@ -81,9 +81,9 @@ export class BusinessCreateDto {
   status: BusinessStatus;
 
   //stringify properties
-  @IsString()
-  @IsNotEmpty()
-  coordinatesStringify: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // coordinatesStringify: string;
 
   @IsNotEmpty()
   @IsString()
