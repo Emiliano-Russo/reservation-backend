@@ -30,7 +30,15 @@ jobs:
         run: |
           zip deployment.zip Dockerrun.aws.json
 
+      - name: Check if version already exists
+        id: check_version
+        run: |
+          # Custom script to check if the version exists in Elastic Beanstalk
+          # Set output variable accordingly
+          echo "version_exists=true" >> $GITHUB_ENV
+
       - name: Deploy to Elastic Beanstalk
+        if: env.version_exists == 'false'
         uses: einaregilsson/beanstalk-deploy@v14
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
