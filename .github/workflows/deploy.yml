@@ -30,21 +30,13 @@ jobs:
         run: |
           zip deployment.zip Dockerrun.aws.json
 
-      - name: Check if version already exists
-        id: check_version
-        run: |
-          # Custom script to check if the version exists in Elastic Beanstalk
-          # Set output variable accordingly
-          echo "version_exists=true" >> $GITHUB_ENV
-
       - name: Deploy to Elastic Beanstalk
-        if: env.version_exists == 'false'
         uses: einaregilsson/beanstalk-deploy@v14
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: jiren-back-2
           environment_name: Jiren-back-2-env
-          version_label: ${{ github.run_id }}
+          version_label: "deploy-${{ github.run_number }}-${{ github.sha }}"
           region: us-east-1 # o tu región de AWS
           deployment_package: deployment.zip
