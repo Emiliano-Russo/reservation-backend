@@ -46,7 +46,7 @@ export class ReservationController {
         status,
       );
     }
-    else {
+    else if (req.user && req.user.id) {
       return this.reservationService.getReservationsByUserId(
         req.user.id,
         paginationDto,
