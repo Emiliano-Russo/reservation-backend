@@ -8,6 +8,7 @@ import {
   Req,
   UploadedFile,
   UseGuards,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -16,10 +17,26 @@ import { CreateUserDto } from './entities/user.dto';
 import { UpdateUserDto } from './entities/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
+import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
+
+  @Get('count')
+  async getUsersCount() {
+    return this.userService.getUsersCountByCountryAndDepartment();
+  }
+
+  @Get('search')
+  async searchUsers(
+    @Query('country') country: string,
+    @Query('searchTerm') searchTerm: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    console.log('data: ', country, searchTerm, paginationDto);
+    return this.userService.searchUsers(country, searchTerm, paginationDto);
+  }
 
   @Get(':userId')
   async get(@Param('userId') userId: string) {

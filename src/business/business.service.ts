@@ -15,6 +15,7 @@ import { Like, Repository } from 'typeorm';
 import { Availability } from './entities/availability.entity';
 import { Map } from './entities/map.entity';
 import { LocationDto } from './entities/location.entity';
+import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 @Injectable()
 export class BusinessService {
@@ -26,7 +27,9 @@ export class BusinessService {
     private readonly availabilityRepository: Repository<Availability>,
     @InjectRepository(Map)
     private readonly mapRepository: Repository<Map>,
-  ) {}
+    @InjectRepository(Reservation)
+    private readonly reservationRepository: Repository<Reservation>,
+  ) { }
 
   async getBusinessByOwnerId(
     ownerId: string,
@@ -228,9 +231,17 @@ export class BusinessService {
     const business = await this.businessRepository.findOne({ where: { id } });
 
     if (!business) {
-      throw new Error('business not found');
+      throw new NotFoundException(`Business with ID ${id} not found`);
     }
 
+    // Eliminar todas las referencias en Availability
+    await this.availabilityRepository.delete({ business: { id: id } });
+
+    // Eliminar todas las referencias en Reservations
+    // Asumiendo que tienes un repository para Reservations similar a availabilityRepository
+    await this.reservationRepository.delete({ business: { id: id } });
+
+    // Ahora que todas las referencias han sido eliminadas, puedes eliminar el negocio
     await this.businessRepository.remove(business);
   }
 }

@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { UpdateUserDto } from './entities/update-user.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
+import { PaginationDto } from 'src/interfaces/pagination.dto';
 
 @Injectable()
 export class UserService {
@@ -20,7 +21,7 @@ export class UserService {
     private authService: AuthService,
     private readonly mailerService: MailerService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async getUser(id: string) {
     const user = await this.userRepository.findOne({ where: { id: id } });
@@ -148,5 +149,52 @@ export class UserService {
   private generateEmailConfirmationToken(email: string): string {
     const payload = { email, type: 'email-confirmation' };
     return this.jwtService.sign(payload);
+  }
+
+  async searchUsers(
+    country: string,
+    searchTerm: string,
+    paginationDto: PaginationDto,
+  ) {
+    const { limit, page } = paginationDto;
+
+    const query = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.country = :country', { country });
+
+    if (searchTerm) {
+      query.andWhere(
+        'user.name LIKE :searchTerm OR user.email LIKE :searchTerm',
+        { searchTerm: `%${searchTerm}%` },
+      );
+    }
+
+    const users = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return {
+      items: users,
+      total,
+      page,
+      limit,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
+
+  async getUsersCountByCountryAndDepartment(): Promise<any> {
+    const result = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.country', 'country')
+      .addSelect('user.department', 'department')
+      .addSelect('COUNT(user.id)', 'userCount')
+      .groupBy('user.country')
+      .addGroupBy('user.department')
+      .getRawMany();
+
+    return result;
   }
 }

@@ -63,4 +63,7 @@ export class Reservation {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({ type: 'text', nullable: true })
+  rejectionReason?: string;
 }
