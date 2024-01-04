@@ -11,6 +11,7 @@ import { UpdateUserDto } from './entities/update-user.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { PaginationDto } from 'src/interfaces/pagination.dto';
+import { ReservationService } from 'src/reservation/reservation.service';
 
 @Injectable()
 export class UserService {
@@ -196,5 +197,16 @@ export class UserService {
       .getRawMany();
 
     return result;
+  }
+
+  async deleteUser(id: string) {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Ahora, después de eliminar todas las referencias, elimina el usuario
+    await this.userRepository.remove(user);
+    return { message: 'User deleted successfully' };
   }
 }

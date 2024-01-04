@@ -300,6 +300,23 @@ export class ReservationService {
     return await this.reservationRepository.save(reservation);
   }
 
+  async deleteUser(userId: string): Promise<{ message: string }> {
+    const reservations = await this.reservationRepository.find({
+      where: { user: { id: userId } },
+    });
+    console.log('reservations: ', reservations);
+
+    for (const reservation of reservations) {
+      await this.reservationRepository.remove(reservation);
+    }
+
+    this.userService.deleteUser(userId);
+
+    return {
+      message: 'User and all related reservations deleted successfully',
+    };
+  }
+
   async userResponseProposedSchedule(
     id: string,
     value: AcceptStatus,

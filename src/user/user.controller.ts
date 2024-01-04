@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseGuards,
   Query,
+  Delete,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';

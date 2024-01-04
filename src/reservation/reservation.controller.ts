@@ -30,6 +30,7 @@ export class ReservationController {
   async getReservations(
     @Query() paginationDto: PaginationDto,
     @Req() req: Request,
+    @Query() userId?: string,
     @Query('businessId') businessId?: string,
     @Query('search') search: string = '',
     @Query('startDate') startDate?: string,
@@ -46,9 +47,19 @@ export class ReservationController {
         status,
       );
     }
-    else if (req.user && req.user.id) {
+    else if (req.user) {
       return this.reservationService.getReservationsByUserId(
         req.user.id,
+        paginationDto,
+        search,
+        startDate,
+        endDate,
+        status,
+      );
+    }
+    else if (userId) {
+      return this.reservationService.getReservationsByUserId(
+        userId,
         paginationDto,
         search,
         startDate,
@@ -110,5 +121,10 @@ export class ReservationController {
   @Delete(':id')
   async removeReservation(@Param('id') id: string) {
     return this.reservationService.removeReservation(id);
+  }
+
+  @Delete('user/:userId')
+  async delete(@Param('userId') userId: string) {
+    return this.reservationService.deleteUser(userId);
   }
 }
