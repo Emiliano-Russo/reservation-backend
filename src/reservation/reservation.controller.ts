@@ -30,7 +30,7 @@ export class ReservationController {
   async getReservations(
     @Query() paginationDto: PaginationDto,
     @Req() req: Request,
-    @Query() userId?: string,
+    @Query('userId') userId?: string,
     @Query('businessId') businessId?: string,
     @Query('search') search: string = '',
     @Query('startDate') startDate?: string,
